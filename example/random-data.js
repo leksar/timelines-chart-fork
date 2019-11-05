@@ -1,13 +1,13 @@
 function getRandomData(ordinal = false) {
 
-  const NGROUPS = 6,
-    MAXLINES = 15,
-    MAXSEGMENTS = 20,
+  const NGROUPS = 4,
+    MAXLINES = 3,
+    MAXSEGMENTS = 10,
     MAXCATEGORIES = 20,
     MINTIME = new Date(2013,2,21);
 
   const nCategories = Math.ceil(Math.random()*MAXCATEGORIES),
-    categoryLabels = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'];
+    categoryLabels = ['monitor','program','application','keyboard','javascript','gaming','network','3.1.20','213','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'];
 
   return [...Array(NGROUPS).keys()].map(i => ({
     group: 'group' + (i+1),

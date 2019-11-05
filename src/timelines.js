@@ -33,13 +33,14 @@ import {
   utcFormat as d3UtcFormat
 } from 'd3-time-format';
 import d3Tip from 'd3-tip';
-import { schemeCategory10, schemeSet3, interpolateRdYlBu } from 'd3-scale-chromatic';
+import { schemeCategory10, schemeDark2, interpolateRdYlBu } from 'd3-scale-chromatic';
 
 import { moveToFront as MoveToFront, gradient as Gradient } from 'svg-utils';
 import { fitToBox as TextFitToBox } from 'svg-text-fit';
 import ColorLegend from 'd3-color-legend';
 import TimeOverview from './time-overview.js';
 import { alphaNumCmp } from './comparison.js';
+import getCorrectTextColor from './textColor';
 
 export default Kapsule({
   props: {
@@ -129,7 +130,7 @@ export default Kapsule({
     zColorScale: { default: d3ScaleSequential(interpolateRdYlBu) },
     zQualitative: { default: false, onChange(discrete, state) {
       state.zColorScale = discrete
-        ? d3ScaleOrdinal([...schemeCategory10, ...schemeSet3])
+        ? d3ScaleOrdinal([...schemeCategory10, ...schemeDark2 ])
         : d3ScaleSequential(interpolateRdYlBu); // alt: d3.interpolateInferno
     }},
     zDataLabel: { default: '', triggerUpdate: false }, // Units of z data. Used in the tooltip descriptions
@@ -954,32 +955,40 @@ export default Kapsule({
 
       state.lineHeight = state.graphH/state.nLines*0.8;
 
-      let timelines = state.graph.selectAll('rect.series-segment').data(
+      let timelines = state.graph.selectAll('g.series-container').data(
         state.flatData.filter(dataFilter),
         d => d.group + d.label + d.timeRange[0]
       );
 
       timelines.exit()
         .transition().duration(state.transDuration)
-        .style('fill-opacity', 0)
+        .style('opacity', 0)
         .remove();
 
-      const newSegments = timelines.enter().append('rect')
-        .attr('class', 'series-segment')
-        .attr('rx', 1)
-        .attr('ry', 1)
-        .attr('x', state.graphW/2)
-        .attr('y', state.graphH/2)
-        .attr('width', 0)
-        .attr('height', 0)
-        .style('fill', d => state.zColorScale(d.val))
-        .style('fill-opacity', 0)
-        .on('mouseover.groupTooltip', state.groupTooltip.show)
-        .on('mouseout.groupTooltip', state.groupTooltip.hide)
-        .on('mouseover.lineTooltip', state.lineTooltip.show)
-        .on('mouseout.lineTooltip', state.lineTooltip.hide)
-        .on('mouseover.segmentTooltip', state.segmentTooltip.show)
-        .on('mouseout.segmentTooltip', state.segmentTooltip.hide);
+      const newSegments = timelines.enter().append('g').attr('class', 'series-container')
+
+      newSegments.append('rect')
+      .attr('class', 'series-segment')
+      .attr('rx', 1)
+      .attr('ry', 1)
+      .attr('x', state.graphW/2)
+      .attr('y', state.graphH/2)
+      .attr('width', 0)
+      .attr('height', 0)
+      .style('fill', d => state.zColorScale(d.val))
+      .style('fill-opacity', 0)
+      .on('mouseover.groupTooltip', state.groupTooltip.show)
+      .on('mouseout.groupTooltip', state.groupTooltip.hide)
+      .on('mouseover.lineTooltip', state.lineTooltip.show)
+      .on('mouseout.lineTooltip', state.lineTooltip.hide)
+      .on('mouseover.segmentTooltip', state.segmentTooltip.show)
+      .on('mouseout.segmentTooltip', state.segmentTooltip.hide);
+
+      newSegments
+      .append('text')
+      .html(d => d.val)
+      .attr('fill',d => getCorrectTextColor(state.zColorScale(d.val)))
+      .style('font-family','sans-serif')
 
       newSegments
         .on('mouseover', function() {
@@ -1025,8 +1034,7 @@ export default Kapsule({
         });
 
       timelines = timelines.merge(newSegments);
-
-      timelines.transition().duration(state.transDuration)
+      timelines.selectAll('rect').transition().duration(state.transDuration)
         .attr('x', function (d) {
           return state.xScale(d.timeRange[0]);
         })
@@ -1038,6 +1046,15 @@ export default Kapsule({
         })
         .attr('height', state.lineHeight)
         .style('fill-opacity', .8);
+
+        timelines.selectAll('text').transition().duration(state.transDuration)
+        .attr('x', function (d) {
+          return state.xScale(d.timeRange[0]) + 6;
+        })
+        .style("font-size", state.lineHeight*0.6 + "px")
+        .attr('y', function (d) {
+          return state.yScale(d.group+'+&+'+d.label)+(state.lineHeight*0.7)-state.lineHeight/2;
+        })
     }
   }
 });

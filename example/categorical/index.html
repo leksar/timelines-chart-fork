@@ -1,17 +1,21 @@
 <head>
-  <script src='//unpkg.com/timelines-chart'></script>
-  <!--<script src='../../dist/timelines-chart.js'></script>-->
+  <!-- <script src='//unpkg.com/timelines-chart'></script> -->
+  <script src='../../dist/timelines-chart.js'></script>
 
   <script src='../random-data.js'></script>
-</head>
+ </head>
 
 <body>
+  <div>
+    <i class='fa fa-truck'></i>
+  </div>
   <script>
     const myData = getRandomData(true);
 
     TimelinesChart()(document.body)
       .zScaleLabel('My Scale Units')
       .zQualitative(true)
+      .maxLineHeight(30)
       .data(myData);
   </script>
 </body>
