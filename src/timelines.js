@@ -984,11 +984,15 @@ export default Kapsule({
       .on('mouseover.segmentTooltip', state.segmentTooltip.show)
       .on('mouseout.segmentTooltip', state.segmentTooltip.hide);
 
-      newSegments
-      .append('text')
-      .html(d => d.val)
-      .attr('fill',d => getCorrectTextColor(state.zColorScale(d.val)))
-      .style('font-family','sans-serif')
+      function calculateRectCaption(d) {
+        const rectWidth = state.xScale(d.timeRange[1])-state.xScale(d.timeRange[0]);
+        const letterWidth = state.lineHeight * 0.3;
+        const lettersToFit = Math.floor((rectWidth - 12)/letterWidth);
+        return d.val.length <= lettersToFit ? d.val : d.val.substring(0,lettersToFit - 1) + (lettersToFit - 1 > 0 ? '...' : '');
+      }
+      
+      // newSegments
+
 
       newSegments
         .on('mouseover', function() {
@@ -1046,8 +1050,13 @@ export default Kapsule({
         })
         .attr('height', state.lineHeight)
         .style('fill-opacity', .8);
+        
+      timelines.selectAll('text').remove(0)
 
-        timelines.selectAll('text').transition().duration(state.transDuration)
+      timelines
+        .append('text')
+        .html(d => calculateRectCaption(d))
+        .attr('fill',d => getCorrectTextColor(state.zColorScale(d.val)))
         .attr('x', function (d) {
           return state.xScale(d.timeRange[0]) + 6;
         })
@@ -1055,6 +1064,18 @@ export default Kapsule({
         .attr('y', function (d) {
           return state.yScale(d.group+'+&+'+d.label)+(state.lineHeight*0.7)-state.lineHeight/2;
         })
+        .style('font-family','sans-serif')
+        .style('fill-opacity', 0);
+
+      timelines.selectAll('text').transition().duration(state.transDuration *2)
+        .attr('x', function (d) {
+          return state.xScale(d.timeRange[0]) + 6;
+        })
+        .style("font-size", state.lineHeight*0.6 + "px")
+        .attr('y', function (d) {
+          return state.yScale(d.group+'+&+'+d.label)+(state.lineHeight*0.7)-state.lineHeight/2;
+        })
+        .style('fill-opacity', .8);
     }
   }
 });

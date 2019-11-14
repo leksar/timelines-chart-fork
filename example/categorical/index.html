@@ -3,6 +3,7 @@
   <script src='../../dist/timelines-chart.js'></script>
 
   <script src='../random-data.js'></script>
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/d3/4.13.0/d3.min.js'></script>
  </head>
 
 <body>
@@ -10,12 +11,48 @@
     <i class='fa fa-truck'></i>
   </div>
   <script>
+          d3.timeFormatDefaultLocale({
+        "decimal": ",",
+        "thousands": "\xa0",
+        "grouping": [3],
+        "currency": ["", " руб."],
+        "dateTime": "%A, %e %B %Y г. %X",
+        "date": "%d.%m.%Y",
+        "time": "%H:%M:%S",
+        "periods": ["AM", "PM"],
+        "days": ["воскресенье", "понедельник", "вторник", "среда", "четверг", "пятница", "суббота"],
+        "shortDays": ["вс", "пн", "вт", "ср", "чт", "пт", "сб"],
+        "months": ["января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря"],
+        "shortMonths": ["янв", "фев", "мар", "апр", "май", "июн", "июл", "авг", "сен", "окт", "ноя", "дек"]
+    });
+
+    var formatMillisecond = d3.timeFormat(".%L"),
+        formatSecond = d3.timeFormat(":%S"),
+        formatMinute = d3.timeFormat("%H:%M"),
+        formatHour = d3.timeFormat("%H"),
+        formatDay = d3.timeFormat("%a %d"),
+        formatWeek = d3.timeFormat("%b %d"),
+        formatMonth = d3.timeFormat("%B"),
+        formatYear = d3.timeFormat("%Y");
+
+    // Define filter conditions
+    function multiFormat(date) {
+        return (d3.timeSecond(date) < date ? formatMillisecond
+            : d3.timeMinute(date) < date ? formatSecond
+                : d3.timeHour(date) < date ? formatMinute
+                    : d3.timeDay(date) < date ? formatHour
+                        : d3.timeMonth(date) < date ? (d3.timeWeek(date) < date ? formatDay : formatWeek)
+                            : d3.timeYear(date) < date ? formatMonth
+                                : formatYear)(date);
+    }
+
     const myData = getRandomData(true);
 
     TimelinesChart()(document.body)
       .zScaleLabel('My Scale Units')
       .zQualitative(true)
       .maxLineHeight(30)
+      .xTickFormat(multiFormat)
       .data(myData);
   </script>
 </body>
