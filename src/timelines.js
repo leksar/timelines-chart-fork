@@ -65,31 +65,68 @@ export default Kapsule({
         //
 
         function parseData(rawData) {
-
+          
+          
           state.completeStructData = [];
-          state.completeFlatData = [];
           state.totalNLines = 0;
+          state.completeFlatData = [];
 
-          for (let i=0, ilen=rawData.length; i<ilen; i++) {
-            const group = rawData[i].group;
+          let dataWithLevels = [];
+          rawData.forEach( g => {
             state.completeStructData.push({
-              group: group,
-              lines: rawData[i].data.map(d => d.label)
+              group: g.group,
+              lines: [1]
             });
+            state.totalNLines++;
 
-            for (let j= 0, jlen=rawData[i].data.length; j<jlen; j++) {
-              for (let k= 0, klen=rawData[i].data[j].data.length; k<klen; k++) {
-                state.completeFlatData.push({
-                  group: group,
-                  label: rawData[i].data[j].label,
-                  timeRange: rawData[i].data[j].data[k].timeRange.map(d => new Date(d)),
-                  val: rawData[i].data[j].data[k].val,
-                  labelVal: rawData[i].data[j].data[k][rawData[i].data[j].data[k].hasOwnProperty('labelVal')?'labelVal':'val']
+            const flat = g.data.map(el => el.data.map(m => { return {timeRange: [new Date(m.timeRange[0]), new Date(m.timeRange[1])], val: m.val};})).flat().sort((a,b) => a.timeRange[0] - b.timeRange[0]);
+
+            flat.forEach(el => {
+              const maxLevel = Math.max(1,...dataWithLevels.filter(f => f.group === g.group).map(m => m.label));
+              let elementAdded = false;
+              for (let i = 1; i <= maxLevel; i++) {
+                let isIntersects = false;
+                dataWithLevels.filter(f => (f.label === i) && (f.group === g.group)).forEach(elwl => {
+                  if (el.timeRange[0] < elwl.timeRange[1] && el.timeRange[1] > elwl.timeRange[0]) isIntersects = true;
                 });
+                if (!isIntersects) {
+                  dataWithLevels.push({group: g.group, ...el, label: i});
+                  elementAdded = true;
+                  break;
+                }
               }
-              state.totalNLines++;
-            }
-          }
+
+              if (!elementAdded) {
+                dataWithLevels.push({group: g.group, ...el, label: maxLevel+1});
+                state.completeStructData.find(s => s.group === g.group).lines.push(maxLevel+1);
+                state.totalNLines++;
+              }
+            })
+
+          });
+
+          state.completeFlatData = dataWithLevels;
+
+          // for (let i=0, ilen=rawData.length; i<ilen; i++) {
+          //   const group = rawData[i].group;
+          //   state.completeStructData.push({
+          //     group: group,
+          //     lines: rawData[i].data.map(d => d.label)
+          //   });
+
+          //   for (let j= 0, jlen=rawData[i].data.length; j<jlen; j++) {
+          //     for (let k= 0, klen=rawData[i].data[j].data.length; k<klen; k++) {
+          //       // state.completeFlatData.push({
+          //       //   group: group,
+          //       //   label: rawData[i].data[j].label,
+          //       //   timeRange: rawData[i].data[j].data[k].timeRange.map(d => new Date(d)),
+          //       //   val: rawData[i].data[j].data[k].val,
+          //       //   labelVal: rawData[i].data[j].data[k][rawData[i].data[j].data[k].hasOwnProperty('labelVal')?'labelVal':'val']
+          //       // });
+          //     }
+          //     state.totalNLines++;
+          //   }
+          // }
         }
       }
     },
@@ -163,7 +200,6 @@ export default Kapsule({
       function y2Label(y) {
 
         if (y==null) return y;
-
         let cntDwn = y;
         for (let i=0, len=state.completeStructData.length; i<len; i++) {
           if (state.completeStructData[i].lines.length>cntDwn)
@@ -971,7 +1007,7 @@ export default Kapsule({
       .attr('class', 'series-segment')
       .attr('rx', 1)
       .attr('ry', 1)
-      .attr('x', state.graphW/2)
+      .attr('x', () => state.graphW/2)
       .attr('y', state.graphH/2)
       .attr('width', 0)
       .attr('height', 0)
