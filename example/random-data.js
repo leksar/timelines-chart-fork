@@ -10,7 +10,7 @@ function getRandomData(ordinal = false) {
     categoryLabels = ['monitor','program','application','keyboard','javascript','gaming','network','3.1.20','213','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'];
 
   return [...Array(NGROUPS).keys()].map(i => ({
-    group: 'group' + (i+1),
+    group: categoryLabels[Math.ceil(Math.random()*nCategories)] + (i+1),
     data: getGroupData()
   }));
 

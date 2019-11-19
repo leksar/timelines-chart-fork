@@ -52,6 +52,9 @@
   .series-group, .series-segment {
     cursor: crosshair;
   }
+  .series-container text {
+    pointer-events: none;
+  }
 
   .legend {
     font-family: Sans-Serif;
@@ -98,12 +101,13 @@
 }
 
 .chart-tooltip {
-  color: #eee;
-  background: rgba(0,0,140,0.85);
-  padding: 5px;
-  border-radius: 3px;
-  font: 11px sans-serif;
+  color: #555;
+  background: white;
+  padding: 8px;
+  border-radius: 2px;
+  font: 14px sans-serif;
   z-index: 4000;
+  border: 1px solid #ccc;
 
   &.group-tooltip {
     font-size: 14px;

@@ -55,7 +55,8 @@ export default Kapsule({
         ];
 
         state.zoomY = [null, null];
-
+        
+        state.leftMargin = data.reduce((max, el) => Math.max(max,el.group.length), 0) * 7 + 10;
         if (state.overviewArea) {
           state.overviewArea
             .domainRange(state.zoomX)
@@ -106,7 +107,7 @@ export default Kapsule({
           });
 
           state.completeFlatData = dataWithLevels;
-
+          
           // for (let i=0, ilen=rawData.length; i<ilen; i++) {
           //   const group = rawData[i].group;
           //   state.completeStructData.push({
@@ -130,11 +131,11 @@ export default Kapsule({
         }
       }
     },
-    width: { default: window.innerWidth },
+    width: { default: window.innerWidth - 40 },
     maxHeight: { default: 640 },
     maxLineHeight: { default: 12 },
     leftMargin: { default: 90 },
-    rightMargin: { default: 100 },
+    rightMargin: { default: 0 },
     topMargin: {default: 26 },
     bottomMargin: {default: 30 },
     useUtc: { default: false },
@@ -484,54 +485,58 @@ export default Kapsule({
     }
 
     function addTooltips() {
-      state.groupTooltip = d3Tip()
-        .attr('class', 'chart-tooltip group-tooltip')
-        .direction('w')
-        .offset([0, 0])
-        .html(d => {
-          const leftPush = (d.hasOwnProperty('timeRange')
-            ?state.xScale(d.timeRange[0])
-            :0
-          );
-          const topPush = (d.hasOwnProperty('label')
-            ?state.grpScale(d.group)-state.yScale(d.group+'+&+'+d.label)
-            :0
-          );
-          state.groupTooltip.offset([topPush, -leftPush]);
-          return d.group;
-        });
+      // state.groupTooltip = d3Tip()
+      //   .attr('class', 'chart-tooltip group-tooltip')
+      //   .direction('w')
+      //   .offset([0, 0])
+      //   .html(d => {
+      //     const leftPush = (d.hasOwnProperty('timeRange')
+      //       ?state.xScale(d.timeRange[0])
+      //       :0
+      //     );
+      //     const topPush = (d.hasOwnProperty('label')
+      //       ?state.grpScale(d.group)-state.yScale(d.group+'+&+'+d.label)
+      //       :0
+      //     );
+      //     state.groupTooltip.offset([topPush, -leftPush]);
+      //     return d.group;
+      //   });
 
-      state.svg.call(state.groupTooltip);
+      // state.svg.call(state.groupTooltip);
 
-      state.lineTooltip = d3Tip()
-        .attr('class', 'chart-tooltip line-tooltip')
-        .direction('e')
-        .offset([0, 0])
-        .html(d => {
-          const rightPush = (d.hasOwnProperty('timeRange')?state.xScale.range()[1]-state.xScale(d.timeRange[1]):0);
-          state.lineTooltip.offset([0, rightPush]);
-          return d.label;
-        });
+      // state.lineTooltip = d3Tip()
+      //   .attr('class', 'chart-tooltip line-tooltip')
+      //   .direction('e')
+      //   .offset([0, 0])
+      //   .html(d => {
+      //     const rightPush = (d.hasOwnProperty('timeRange')?state.xScale.range()[1]-state.xScale(d.timeRange[1]):0);
+      //     state.lineTooltip.offset([0, rightPush]);
+      //     return d.label;
+      //   });
 
-      state.svg.call(state.lineTooltip);
+      // state.svg.call(state.lineTooltip);
 
       state.segmentTooltip = d3Tip()
         .attr('class', 'chart-tooltip segment-tooltip')
         .direction('s')
         .offset([5, 0])
         .html(d => {
-          const normVal = state.zColorScale.domain()[state.zColorScale.domain().length-1] - state.zColorScale.domain()[0];
-          const dateFormat = (state.useUtc ? d3UtcFormat : d3TimeFormat)(`${state.timeFormat}${state.useUtc?' (UTC)':''}`);
-          return '<strong>' + d.labelVal + ' </strong>' + state.zDataLabel
-            + (normVal?' (<strong>' + Math.round((d.val-state.zColorScale.domain()[0])/normVal*100*100)/100 + '%</strong>)':'') + '<br>'
-            + '<strong>From: </strong>' + dateFormat(d.timeRange[0]) + '<br>'
-            + '<strong>To: </strong>' + dateFormat(d.timeRange[1]);
+          // const normVal = state.zColorScale.domain()[state.zColorScale.domain().length-1] - state.zColorScale.domain()[0];
+          // const dateFormat = (state.useUtc ? d3UtcFormat : d3TimeFormat)(`${state.timeFormat}${state.useUtc?' (UTC)':''}`);
+          const timeFormat = d3TimeFormat('%Y-%m-%d %H:%M:%S');
+          return d.group + '<br>'
+            + d.val + '<br>'
+            // + (normVal?' (<strong>' + Math.round((d.val-state.zColorScale.domain()[0])/normVal*100*100)/100 + '%</strong>)':'') + '<br>'
+            + 'от: ' + timeFormat(d.timeRange[0]) + '<br>'
+            + 'до: ' + timeFormat(d.timeRange[1]) + '<br>'
+            + 'продолжительность: ' + Math.round((d.timeRange[1] - d.timeRange[0]) / 1000 / 60);
         });
 
       state.svg.call(state.segmentTooltip);
     }
 
     function addZoomSelection() {
+
       state.graph.on('mousedown', function() {
         if (d3Select(window).on('mousemove.zoomRect')!=null) // Selection already active
           return;
@@ -605,7 +610,7 @@ export default Kapsule({
 
       state.resetBtn = state.svg.append('text')
         .attr('class', 'reset-zoom-btn')
-        .text('Reset Zoom')
+        .text('Сбросить масштаб')
         .style('text-anchor', 'end')
         .on('mouseup' , function() {
           state.svg.dispatch('resetZoom');
@@ -615,6 +620,10 @@ export default Kapsule({
         })
         .on('mouseout', function() {
           d3Select(this).style('opacity', .6);
+        });
+
+        state.graph.on('dblclick', function() {
+          state.svg.dispatch('resetZoom');
         });
     }
 
@@ -900,13 +909,13 @@ export default Kapsule({
       let fontSize = Math.min(12, state.graphH/tickVals.length*fontVerticalMargin*Math.sqrt(2));
       let maxChars = Math.ceil(state.rightMargin/(fontSize/Math.sqrt(2)));
 
-      state.yAxis.tickValues(tickVals);
-      state.yAxis.tickFormat(d => reduceLabel(d.split('+&+')[1], maxChars));
-      state.svg.select('g.y-axis')
-        .transition().duration(state.transDuration)
-          .attr('transform', 'translate(' + state.graphW + ', 0)')
-          .style('font-size', fontSize + 'px')
-          .call(state.yAxis);
+      // state.yAxis.tickValues(tickVals);
+      // state.yAxis.tickFormat(d => reduceLabel(d.split('+&+')[1], maxChars));
+      // state.svg.select('g.y-axis')
+      //   .transition().duration(state.transDuration)
+      //     .attr('transform', 'translate(' + state.graphW + ', 0)')
+      //     .style('font-size', fontSize + 'px')
+      //     .call(state.yAxis);
 
       // Grp
       const minHeight = d3Min(state.grpScale.range(), function (d,i) {
@@ -915,7 +924,8 @@ export default Kapsule({
       fontSize = Math.min(14, minHeight*fontVerticalMargin*Math.sqrt(2));
       maxChars = Math.floor(state.leftMargin/(fontSize/Math.sqrt(2)));
 
-      state.grpAxis.tickFormat(d => reduceLabel(d, maxChars));
+      // state.grpAxis.tickFormat(d => reduceLabel(d, maxChars));
+      state.grpAxis.tickFormat(d => d);
       state.svg.select('g.grp-axis')
         .transition().duration(state.transDuration)
         .style('font-size', fontSize + 'px')
@@ -958,8 +968,8 @@ export default Kapsule({
         .attr('y', 0)
         .attr('height', 0)
         .style('fill', 'url(#' + state.groupGradId + ')')
-        .on('mouseover', state.groupTooltip.show)
-        .on('mouseout', state.groupTooltip.hide);
+        // .on('mouseover', state.groupTooltip.show)
+        // .on('mouseout', state.groupTooltip.hide);
 
       newGroups.append('title')
         .text('click-drag to zoom in');
@@ -1013,10 +1023,10 @@ export default Kapsule({
       .attr('height', 0)
       .style('fill', d => state.zColorScale(d.val))
       .style('fill-opacity', 0)
-      .on('mouseover.groupTooltip', state.groupTooltip.show)
-      .on('mouseout.groupTooltip', state.groupTooltip.hide)
-      .on('mouseover.lineTooltip', state.lineTooltip.show)
-      .on('mouseout.lineTooltip', state.lineTooltip.hide)
+      // .on('mouseover.groupTooltip', state.groupTooltip.show)
+      // .on('mouseout.groupTooltip', state.groupTooltip.hide)
+      // .on('mouseover.lineTooltip', state.lineTooltip.show)
+      // .on('mouseout.lineTooltip', state.lineTooltip.hide)
       .on('mouseover.segmentTooltip', state.segmentTooltip.show)
       .on('mouseout.segmentTooltip', state.segmentTooltip.hide);
 
@@ -1091,7 +1101,7 @@ export default Kapsule({
 
       timelines
         .append('text')
-        .html(d => calculateRectCaption(d))
+        .html((d) => calculateRectCaption(d))
         .attr('fill',d => getCorrectTextColor(state.zColorScale(d.val)))
         .attr('x', function (d) {
           return state.xScale(d.timeRange[0]) + 6;
