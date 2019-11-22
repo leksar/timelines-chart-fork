@@ -48,15 +48,14 @@ export default Kapsule({
       default: [],
       onChange(data, state) {
         parseData(data);
-
         state.zoomX = [
-          d3Min(state.completeFlatData, d => d.timeRange[0]),
-          d3Max(state.completeFlatData, d => d.timeRange[1])
+          Math.min((state.zoomX && state.zoomX[0]), d3Min(state.completeFlatData, d => d.timeRange[0])),
+          Math.max((state.zoomX && state.zoomX[1]), d3Max(state.completeFlatData, d => d.timeRange[1]))
         ];
 
         state.zoomY = [null, null];
-        
-        state.leftMargin = data.reduce((max, el) => Math.max(max,el.group.length), 0) * 7 + 10;
+
+        state.leftMargin = data.reduce((max, el) => Math.max(max, el.group.length), 0) * 7 + 10;
         if (state.overviewArea) {
           state.overviewArea
             .domainRange(state.zoomX)
@@ -66,24 +65,24 @@ export default Kapsule({
         //
 
         function parseData(rawData) {
-          
-          
+
+
           state.completeStructData = [];
           state.totalNLines = 0;
           state.completeFlatData = [];
 
           let dataWithLevels = [];
-          rawData.forEach( g => {
+          rawData.forEach(g => {
             state.completeStructData.push({
               group: g.group,
               lines: [1]
             });
             state.totalNLines++;
 
-            const flat = g.data.map(el => el.data.map(m => { return {timeRange: [new Date(m.timeRange[0]), new Date(m.timeRange[1])], val: m.val};})).flat().sort((a,b) => a.timeRange[0] - b.timeRange[0]);
+            const flat = g.data.map(el => el.data.map(m => { return { timeRange: [new Date(m.timeRange[0]), new Date(m.timeRange[1])], val: m.val }; })).flat().sort((a, b) => a.timeRange[0] - b.timeRange[0]);
 
             flat.forEach(el => {
-              const maxLevel = Math.max(1,...dataWithLevels.filter(f => f.group === g.group).map(m => m.label));
+              const maxLevel = Math.max(1, ...dataWithLevels.filter(f => f.group === g.group).map(m => m.label));
               let elementAdded = false;
               for (let i = 1; i <= maxLevel; i++) {
                 let isIntersects = false;
@@ -91,15 +90,15 @@ export default Kapsule({
                   if (el.timeRange[0] < elwl.timeRange[1] && el.timeRange[1] > elwl.timeRange[0]) isIntersects = true;
                 });
                 if (!isIntersects) {
-                  dataWithLevels.push({group: g.group, ...el, label: i});
+                  dataWithLevels.push({ group: g.group, ...el, label: i });
                   elementAdded = true;
                   break;
                 }
               }
 
               if (!elementAdded) {
-                dataWithLevels.push({group: g.group, ...el, label: maxLevel+1});
-                state.completeStructData.find(s => s.group === g.group).lines.push(maxLevel+1);
+                dataWithLevels.push({ group: g.group, ...el, label: maxLevel + 1 });
+                state.completeStructData.find(s => s.group === g.group).lines.push(maxLevel + 1);
                 state.totalNLines++;
               }
             })
@@ -136,8 +135,8 @@ export default Kapsule({
     maxLineHeight: { default: 12 },
     leftMargin: { default: 90 },
     rightMargin: { default: 0 },
-    topMargin: {default: 26 },
-    bottomMargin: {default: 30 },
+    topMargin: { default: 26 },
+    bottomMargin: { default: 30 },
     useUtc: { default: false },
     xTickFormat: {},
     dateMarker: {},
@@ -146,38 +145,45 @@ export default Kapsule({
       default: [null, null],
       onChange(zoomX, state) {
         if (state.svg)
-          state.svg.dispatch('zoom', { detail: {
-            zoomX: zoomX,
-            zoomY: null,
-            redraw: false
-          }});
+          state.svg.dispatch('zoom', {
+            detail: {
+              zoomX: zoomX,
+              zoomY: null,
+              redraw: false
+            }
+          });
       }
     },
     zoomY: {  // Which lines to show (null = min/max) [0 indexed]
       default: [null, null],
       onChange(zoomY, state) {
         if (state.svg)
-          state.svg.dispatch('zoom', { detail: {
-            zoomX: null,
-            zoomY: zoomY,
-            redraw: false
-          }});
+          state.svg.dispatch('zoom', {
+            detail: {
+              zoomX: null,
+              zoomY: zoomY,
+              redraw: false
+            }
+          });
       }
     },
     minSegmentDuration: {},
     zColorScale: { default: d3ScaleSequential(interpolateRdYlBu) },
-    zQualitative: { default: false, onChange(discrete, state) {
-      state.zColorScale = discrete
-        ? d3ScaleOrdinal([...schemeCategory10, ...schemeDark2 ])
-        : d3ScaleSequential(interpolateRdYlBu); // alt: d3.interpolateInferno
-    }},
+    zQualitative: {
+      default: false,
+      onChange(discrete, state) {
+        state.zColorScale = discrete
+          ? d3ScaleOrdinal([...schemeCategory10, ...schemeDark2 ])
+          : d3ScaleSequential(interpolateRdYlBu); // alt: d3.interpolateInferno
+      }
+    },
     zDataLabel: { default: '', triggerUpdate: false }, // Units of z data. Used in the tooltip descriptions
     zScaleLabel: { default: '', triggerUpdate: false }, // Units of colorScale. Used in the legend label
     enableOverview: { default: true }, // True/False
     enableAnimations: {
       default: true,
       onChange(val, state) {
-        state.transDuration = val?700:0;
+        state.transDuration = val ? 700 : 0;
       }
     },
 
@@ -200,16 +206,16 @@ export default Kapsule({
 
       function y2Label(y) {
 
-        if (y==null) return y;
+        if (y == null) return y;
         let cntDwn = y;
-        for (let i=0, len=state.completeStructData.length; i<len; i++) {
-          if (state.completeStructData[i].lines.length>cntDwn)
+        for (let i = 0, len = state.completeStructData.length; i < len; i++) {
+          if (state.completeStructData[i].lines.length > cntDwn)
             return getIdxLine(state.completeStructData[i], cntDwn);
-          cntDwn-=state.completeStructData[i].lines.length;
+          cntDwn -= state.completeStructData[i].lines.length;
         }
 
         // y larger than all lines, return last
-        return getIdxLine(state.completeStructData[state.completeStructData.length-1], state.completeStructData[state.completeStructData.length-1].lines.length-1);
+        return getIdxLine(state.completeStructData[state.completeStructData.length - 1], state.completeStructData[state.completeStructData.length - 1].lines.length - 1);
 
         //
 
@@ -224,41 +230,41 @@ export default Kapsule({
       function label2Y(label, useIdxAfterIfNotFound) {
 
         useIdxAfterIfNotFound = useIdxAfterIfNotFound || false;
-        const subIdxNotFound = useIdxAfterIfNotFound?0:1;
+        const subIdxNotFound = useIdxAfterIfNotFound ? 0 : 1;
 
-        if (label==null) return label;
+        if (label == null) return label;
 
-        let idx=0;
-        for (let i=0, lenI=state.completeStructData.length; i<lenI; i++) {
+        let idx = 0;
+        for (let i = 0, lenI = state.completeStructData.length; i < lenI; i++) {
           const grpCmp = state.grpCmpFunction(label.group, state.completeStructData[i].group);
-          if (grpCmp<0) break;
-          if (grpCmp==0 && label.group==state.completeStructData[i].group) {
-            for (let j=0, lenJ=state.completeStructData[i].lines.length; j<lenJ; j++) {
+          if (grpCmp < 0) break;
+          if (grpCmp == 0 && label.group == state.completeStructData[i].group) {
+            for (let j = 0, lenJ = state.completeStructData[i].lines.length; j < lenJ; j++) {
               const cmpRes = state.labelCmpFunction(label.label, state.completeStructData[i].lines[j]);
-              if (cmpRes<0) {
-                return idx+j-subIdxNotFound;
+              if (cmpRes < 0) {
+                return idx + j - subIdxNotFound;
               }
-              if (cmpRes==0 && label.label==state.completeStructData[i].lines[j]) {
-                return idx+j;
+              if (cmpRes == 0 && label.label == state.completeStructData[i].lines[j]) {
+                return idx + j;
               }
             }
-            return idx+state.completeStructData[i].lines.length-subIdxNotFound;
+            return idx + state.completeStructData[i].lines.length - subIdxNotFound;
           }
-          idx+=state.completeStructData[i].lines.length;
+          idx += state.completeStructData[i].lines.length;
         }
-        return idx-subIdxNotFound;
+        return idx - subIdxNotFound;
       }
     },
     sort(state, labelCmpFunction, grpCmpFunction) {
-      if (labelCmpFunction==null) { labelCmpFunction = state.labelCmpFunction }
-      if (grpCmpFunction==null) { grpCmpFunction = state.grpCmpFunction }
+      if (labelCmpFunction == null) { labelCmpFunction = state.labelCmpFunction }
+      if (grpCmpFunction == null) { grpCmpFunction = state.grpCmpFunction }
 
       state.labelCmpFunction = labelCmpFunction;
       state.grpCmpFunction = grpCmpFunction;
 
       state.completeStructData.sort((a, b) => grpCmpFunction(a.group, b.group));
 
-      for (let i=0, len=state.completeStructData.length;i<len;i++) {
+      for (let i = 0, len = state.completeStructData.length; i < len; i++) {
         state.completeStructData[i].lines.sort(labelCmpFunction);
       }
 
@@ -267,16 +273,16 @@ export default Kapsule({
       return this;
     },
     sortAlpha(state, asc) {
-      if (asc==null) { asc=true }
-      const alphaCmp = function (a, b) { return alphaNumCmp(asc?a:b, asc?b:a); };
+      if (asc == null) { asc = true }
+      const alphaCmp = function (a, b) { return alphaNumCmp(asc ? a : b, asc ? b : a); };
       return this.sort(alphaCmp, alphaCmp);
     },
     sortChrono(state, asc) {
-      if (asc==null) { asc=true }
+      if (asc == null) { asc = true }
 
       function buildIdx(accessFunction) {
         const idx = {};
-        for (let i= 0, len=state.completeFlatData.length; i<len; i++ ) {
+        for (let i = 0, len = state.completeFlatData.length; i < len; i++) {
           const key = accessFunction(state.completeFlatData[i]);
           if (idx.hasOwnProperty(key)) { continue; }
 
@@ -291,21 +297,21 @@ export default Kapsule({
 
       const timeCmp = function (a, b) {
 
-        const aT = a[1], bT=b[1];
+        const aT = a[1], bT = b[1];
 
         if (!aT || !bT) return null; // One of the two vals is null
 
-        if (aT[1].getTime()==bT[1].getTime()) {
-          if (aT[0].getTime()==bT[0].getTime()) {
-            return alphaNumCmp(a[0],b[0]); // If first and last is same, use alphaNum
+        if (aT[1].getTime() == bT[1].getTime()) {
+          if (aT[0].getTime() == bT[0].getTime()) {
+            return alphaNumCmp(a[0], b[0]); // If first and last is same, use alphaNum
           }
-          return aT[0]-bT[0];   // If last is same, earliest first wins
+          return aT[0] - bT[0];   // If last is same, earliest first wins
         }
-        return bT[1]-aT[1]; // latest last wins
+        return bT[1] - aT[1]; // latest last wins
       };
 
       function getCmpFunction(accessFunction, asc) {
-        return (a, b) => timeCmp(accessFunction(asc?a:b), accessFunction(asc?b:a));
+        return (a, b) => timeCmp(accessFunction(asc ? a : b), accessFunction(asc ? b : a));
       }
 
       const grpIdx = buildIdx(d => d.group);
@@ -390,7 +396,7 @@ export default Kapsule({
 
     //
 
-    function buildDomStructure () {
+    function buildDomStructure() {
 
       state.yScale.invert = invertOrdinal;
       state.grpScale.invert = invertOrdinal;
@@ -422,7 +428,7 @@ export default Kapsule({
         );
 
       state.graph = state.svg.append('g');
-      
+
       state.dateMarkerLine = state.svg.append('line').attr('class', 'x-axis-date-marker');
 
       if (state.enableOverview) {
@@ -432,8 +438,8 @@ export default Kapsule({
       // Applies to ordinal scales (invert not supported in d3)
       function invertOrdinal(val, cmpFunc) {
         cmpFunc = cmpFunc || function (a, b) {
-            return (a >= b);
-          };
+          return (a >= b);
+        };
 
         const scDomain = this.domain();
         let scRange = this.range();
@@ -450,29 +456,31 @@ export default Kapsule({
           }
         }
 
-        return this.domain()[this.domain().length-1];
+        return this.domain()[this.domain().length - 1];
       }
 
       function addOverviewArea() {
         state.overviewArea = TimeOverview()
           .margins({ top: 1, right: 20, bottom: 20, left: 20 })
           .onChange((startTime, endTime) => {
-            state.svg.dispatch('zoom', { detail: {
-              zoomX: [startTime, endTime],
-              zoomY: null
-            }});
+            state.svg.dispatch('zoom', {
+              detail: {
+                zoomX: [startTime, endTime],
+                zoomY: null
+              }
+            });
           })
           .domainRange(state.zoomX)
           .currentSelection(state.zoomX)
           (state.overviewAreaElem.node());
 
-        state.svg.on('zoomScent', function() {
+        state.svg.on('zoomScent', function () {
           const zoomX = d3Event.detail.zoomX;
 
           if (!state.overviewArea || !zoomX) return;
 
           // Out of overview bounds > extend it
-          if (zoomX[0]<state.overviewArea.domainRange()[0] || zoomX[1]>state.overviewArea.domainRange()[1]) {
+          if (zoomX[0] < state.overviewArea.domainRange()[0] || zoomX[1] > state.overviewArea.domainRange()[1]) {
             state.overviewArea.domainRange([
               new Date(Math.min(zoomX[0], state.overviewArea.domainRange()[0])),
               new Date(Math.max(zoomX[1], state.overviewArea.domainRange()[1]))
@@ -537,16 +545,16 @@ export default Kapsule({
 
     function addZoomSelection() {
 
-      state.graph.on('mousedown', function() {
-        if (d3Select(window).on('mousemove.zoomRect')!=null) // Selection already active
+      state.graph.on('mousedown', function () {
+        if (d3Select(window).on('mousemove.zoomRect') != null) // Selection already active
           return;
 
         const e = this;
 
-        if (d3Mouse(e)[0]<0 || d3Mouse(e)[0]>state.graphW || d3Mouse(e)[1]<0 || d3Mouse(e)[1]>state.graphH)
+        if (d3Mouse(e)[0] < 0 || d3Mouse(e)[0] > state.graphW || d3Mouse(e)[1] < 0 || d3Mouse(e)[1] > state.graphH)
           return;
 
-        state.disableHover=true;
+        state.disableHover = true;
 
         const rect = state.graph.append('rect')
           .attr('class', 'chart-zoom-selection');
@@ -554,7 +562,7 @@ export default Kapsule({
         const startCoords = d3Mouse(e);
 
         d3Select(window)
-          .on('mousemove.zoomRect', function() {
+          .on('mousemove.zoomRect', function () {
             d3Event.stopPropagation();
             const newCoords = [
               Math.max(0, Math.min(state.graphW, d3Mouse(e)[0])),
@@ -565,43 +573,47 @@ export default Kapsule({
               .attr('width', Math.abs(newCoords[0] - startCoords[0]))
               .attr('height', Math.abs(newCoords[1] - startCoords[1]));
 
-            state.svg.dispatch('zoomScent', { detail: {
-              zoomX: [startCoords[0], newCoords[0]].sort(d3Ascending).map(state.xScale.invert),
-              zoomY: [startCoords[1], newCoords[1]].sort(d3Ascending).map(d =>
-                state.yScale.domain().indexOf(state.yScale.invert(d))
-                + ((state.zoomY && state.zoomY[0])?state.zoomY[0]:0)
-              )
-            }});
+            state.svg.dispatch('zoomScent', {
+              detail: {
+                zoomX: [startCoords[0], newCoords[0]].sort(d3Ascending).map(state.xScale.invert),
+                zoomY: [startCoords[1], newCoords[1]].sort(d3Ascending).map(d =>
+                  state.yScale.domain().indexOf(state.yScale.invert(d))
+                  + ((state.zoomY && state.zoomY[0]) ? state.zoomY[0] : 0)
+                )
+              }
+            });
           })
-          .on('mouseup.zoomRect', function() {
+          .on('mouseup.zoomRect', function () {
             d3Select(window).on('mousemove.zoomRect', null).on('mouseup.zoomRect', null);
             d3Select('body').classed('stat-noselect', false);
             rect.remove();
-            state.disableHover=false;
+            state.disableHover = false;
 
             const endCoords = [
               Math.max(0, Math.min(state.graphW, d3Mouse(e)[0])),
               Math.max(0, Math.min(state.graphH, d3Mouse(e)[1]))
             ];
 
-            if (startCoords[0]==endCoords[0] && startCoords[1]==endCoords[1])
+            if (startCoords[0] == endCoords[0] && startCoords[1] == endCoords[1])
               return;
 
             const newDomainX = [startCoords[0], endCoords[0]].sort(d3Ascending).map(state.xScale.invert);
 
             const newDomainY = [startCoords[1], endCoords[1]].sort(d3Ascending).map(d =>
               state.yScale.domain().indexOf(state.yScale.invert(d))
-              + ((state.zoomY && state.zoomY[0])?state.zoomY[0]:0)
+              + ((state.zoomY && state.zoomY[0]) ? state.zoomY[0] : 0)
             );
 
-            const changeX=((newDomainX[1] - newDomainX[0])>(60*1000)); // Zoom damper
-            const changeY=(newDomainY[0]!=state.zoomY[0] || newDomainY[1]!=state.zoomY[1]);
+            const changeX = ((newDomainX[1] - newDomainX[0]) > (60 * 1000)); // Zoom damper
+            const changeY = (newDomainY[0] != state.zoomY[0] || newDomainY[1] != state.zoomY[1]);
 
             if (changeX || changeY) {
-              state.svg.dispatch('zoom', { detail: {
-                zoomX: changeX?newDomainX:null,
-                zoomY: changeY?newDomainY:null
-              }});
+              state.svg.dispatch('zoom', {
+                detail: {
+                  zoomX: changeX ? newDomainX : null,
+                  zoomY: changeY ? newDomainY : null
+                }
+              });
             }
           }, true);
 
@@ -612,38 +624,40 @@ export default Kapsule({
         .attr('class', 'reset-zoom-btn')
         .text('Сбросить масштаб')
         .style('text-anchor', 'end')
-        .on('mouseup' , function() {
+        .on('mouseup', function () {
           state.svg.dispatch('resetZoom');
         })
-        .on('mouseover', function(){
+        .on('mouseover', function () {
           d3Select(this).style('opacity', 1);
         })
-        .on('mouseout', function() {
+        .on('mouseout', function () {
           d3Select(this).style('opacity', .6);
         });
 
-        state.graph.on('dblclick', function() {
-          state.svg.dispatch('resetZoom');
-        });
+      state.graph.on('dblclick', function () {
+        state.svg.dispatch('resetZoom');
+      });
     }
 
     function setEvents() {
 
-      state.svg.on('zoom', function() {
+      state.svg.on('zoom', function () {
         const evData = d3Event.detail,
           zoomX = evData.zoomX,
           zoomY = evData.zoomY,
-          redraw = (evData.redraw==null)?true:evData.redraw;
+          redraw = (evData.redraw == null) ? true : evData.redraw;
 
         if (!zoomX && !zoomY) return;
 
-        if (zoomX) state.zoomX=zoomX;
-        if (zoomY) state.zoomY=zoomY;
+        if (zoomX) state.zoomX = zoomX;
+        if (zoomY) state.zoomY = zoomY;
 
-        state.svg.dispatch('zoomScent', { detail: {
-          zoomX: zoomX,
-          zoomY: zoomY
-        }});
+        state.svg.dispatch('zoomScent', {
+          detail: {
+            zoomX: zoomX,
+            zoomY: zoomY
+          }
+        });
 
         if (!redraw) return;
 
@@ -651,30 +665,32 @@ export default Kapsule({
         if (state.onZoom) state.onZoom(state.zoomX, state.zoomY);
       });
 
-      state.svg.on('resetZoom', function() {
+      state.svg.on('resetZoom', function () {
         const prevZoomX = state.zoomX;
         const prevZoomY = state.zoomY || [null, null];
 
         const newZoomX = state.enableOverview
-          ?state.overviewArea.domainRange()
-          :[
+          ? state.overviewArea.domainRange()
+          : [
             d3Min(state.flatData, d => d.timeRange[0]),
             d3Max(state.flatData, d => d.timeRange[1])
           ],
           newZoomY = [null, null];
 
-        if (prevZoomX[0]<newZoomX[0] || prevZoomX[1]>newZoomX[1]
-          || prevZoomY[0]!=newZoomY[0] || prevZoomY[1]!=newZoomX[1]) {
+        if (prevZoomX[0] < newZoomX[0] || prevZoomX[1] > newZoomX[1]
+          || prevZoomY[0] != newZoomY[0] || prevZoomY[1] != newZoomX[1]) {
 
           state.zoomX = [
-            new Date(Math.min(prevZoomX[0],newZoomX[0])),
-            new Date(Math.max(prevZoomX[1],newZoomX[1]))
+            new Date(Math.min(prevZoomX[0], newZoomX[0])),
+            new Date(Math.max(prevZoomX[1], newZoomX[1]))
           ];
           state.zoomY = newZoomY;
-          state.svg.dispatch('zoomScent', { detail: {
-            zoomX: state.zoomX,
-            zoomY: state.zoomY
-          }});
+          state.svg.dispatch('zoomScent', {
+            detail: {
+              zoomX: state.zoomX,
+              zoomY: state.zoomY
+            }
+          });
 
           state._rerender();
         }
@@ -703,30 +719,30 @@ export default Kapsule({
 
     function applyFilters() {
       // Flat data based on segment length
-      state.flatData = (state.minSegmentDuration>0
-        ? state.completeFlatData.filter(d => (d.timeRange[1]-d.timeRange[0]) >= state.minSegmentDuration)
+      state.flatData = (state.minSegmentDuration > 0
+        ? state.completeFlatData.filter(d => (d.timeRange[1] - d.timeRange[0]) >= state.minSegmentDuration)
         : state.completeFlatData
       );
 
       // zoomY
-      if (state.zoomY==null || state.zoomY==[null, null]) {
+      if (state.zoomY == null || state.zoomY == [null, null]) {
         state.structData = state.completeStructData;
-        state.nLines=0;
-        for (let i=0, len=state.structData.length; i<len; i++) {
+        state.nLines = 0;
+        for (let i = 0, len = state.structData.length; i < len; i++) {
           state.nLines += state.structData[i].lines.length;
         }
         return;
       }
 
       state.structData = [];
-      const cntDwn = [state.zoomY[0]==null?0:state.zoomY[0]]; // Initial threshold
-      cntDwn.push(Math.max(0, (state.zoomY[1]==null?state.totalNLines:state.zoomY[1]+1)-cntDwn[0])); // Number of lines
+      const cntDwn = [state.zoomY[0] == null ? 0 : state.zoomY[0]]; // Initial threshold
+      cntDwn.push(Math.max(0, (state.zoomY[1] == null ? state.totalNLines : state.zoomY[1] + 1) - cntDwn[0])); // Number of lines
       state.nLines = cntDwn[1];
-      for (let i=0, len=state.completeStructData.length; i<len; i++) {
+      for (let i = 0, len = state.completeStructData.length; i < len; i++) {
 
         let validLines = state.completeStructData[i].lines;
 
-        if(state.minSegmentDuration>0) {  // Use only non-filtered (due to segment length) groups/labels
+        if (state.minSegmentDuration > 0) {  // Use only non-filtered (due to segment length) groups/labels
           if (!state.flatData.some(d => d.group == state.completeStructData[i].group)) {
             continue; // No data for this group
           }
@@ -735,11 +751,11 @@ export default Kapsule({
             .filter(d => state.flatData.some(dd =>
               dd.group == state.completeStructData[i].group && dd.label == d
             )
-          );
+            );
         }
 
-        if (cntDwn[0]>=validLines.length) { // Ignore whole group (before start)
-          cntDwn[0]-=validLines.length;
+        if (cntDwn[0] >= validLines.length) { // Ignore whole group (before start)
+          cntDwn[0] -= validLines.length;
           continue;
         }
 
@@ -748,30 +764,30 @@ export default Kapsule({
           lines: null
         };
 
-        if (validLines.length-cntDwn[0]>=cntDwn[1]) {  // Last (or first && last) group (partial)
-          groupData.lines = validLines.slice(cntDwn[0],cntDwn[1]+cntDwn[0]);
+        if (validLines.length - cntDwn[0] >= cntDwn[1]) {  // Last (or first && last) group (partial)
+          groupData.lines = validLines.slice(cntDwn[0], cntDwn[1] + cntDwn[0]);
           state.structData.push(groupData);
-          cntDwn[1]=0;
+          cntDwn[1] = 0;
           break;
         }
 
-        if (cntDwn[0]>0) {  // First group (partial)
+        if (cntDwn[0] > 0) {  // First group (partial)
           groupData.lines = validLines.slice(cntDwn[0]);
-          cntDwn[0]=0;
+          cntDwn[0] = 0;
         } else {  // Middle group (full fit)
           groupData.lines = validLines;
         }
 
         state.structData.push(groupData);
-        cntDwn[1]-=groupData.lines.length;
+        cntDwn[1] -= groupData.lines.length;
       }
 
-      state.nLines-=cntDwn[1];
+      state.nLines -= cntDwn[1];
     }
 
     function setupDimensions() {
-      state.graphW = state.width-state.leftMargin-state.rightMargin;
-      state.graphH = d3Min([state.nLines*state.maxLineHeight, state.maxHeight-state.topMargin-state.bottomMargin]);
+      state.graphW = state.width - state.leftMargin - state.rightMargin;
+      state.graphH = d3Min([state.nLines * state.maxLineHeight, state.maxHeight - state.topMargin - state.bottomMargin]);
       state.height = state.graphH + state.topMargin + state.bottomMargin;
 
       state.svg.transition().duration(state.transDuration)
@@ -805,23 +821,23 @@ export default Kapsule({
 
     function adjustYScale() {
       let labels = [];
-      for (let i= 0, len=state.structData.length; i<len; i++) {
+      for (let i = 0, len = state.structData.length; i < len; i++) {
         labels = labels.concat(state.structData[i].lines.map(function (d) {
           return state.structData[i].group + '+&+' + d
         }));
       }
 
       state.yScale.domain(labels);
-      state.yScale.range([state.graphH/labels.length*0.5, state.graphH*(1-0.5/labels.length)]);
+      state.yScale.range([state.graphH / labels.length * 0.5, state.graphH * (1 - 0.5 / labels.length)]);
     }
 
     function adjustGrpScale() {
       state.grpScale.domain(state.structData.map(d => d.group));
 
-      let cntLines=0;
+      let cntLines = 0;
       state.grpScale.range(state.structData.map(d => {
-        const pos = (cntLines+d.lines.length/2)/state.nLines*state.graphH;
-        cntLines+=d.lines.length;
+        const pos = (cntLines + d.lines.length / 2) / state.nLines * state.graphH;
+        cntLines += d.lines.length;
         return pos;
       }));
     }
@@ -829,23 +845,23 @@ export default Kapsule({
     function adjustLegend() {
       state.svg.select('.legendG')
         .transition().duration(state.transDuration)
-          .attr('transform', `translate(${state.leftMargin + state.graphW*0.05},2)`);
+        .attr('transform', `translate(${state.leftMargin + state.graphW * 0.05},2)`);
 
       state.colorLegend
-        .width(Math.max(120, state.graphW/3 * (state.zQualitative?2:1)))
-        .height(state.topMargin*.6)
+        .width(Math.max(120, state.graphW / 3 * (state.zQualitative ? 2 : 1)))
+        .height(state.topMargin * .6)
         .scale(state.zColorScale)
         .label(state.zScaleLabel);
 
       state.resetBtn
         .transition().duration(state.transDuration)
-          .attr('x', state.leftMargin + state.graphW*.99)
-          .attr('y', state.topMargin *.8);
+        .attr('x', state.leftMargin + state.graphW * .99)
+        .attr('y', state.topMargin * .8);
 
       TextFitToBox()
         .bbox({
-          width: state.graphW *.4,
-          height: Math.min(13,state.topMargin *.8)
+          width: state.graphW * .4,
+          height: Math.min(13, state.topMargin * .8)
         })
         (state.resetBtn.node());
     }
@@ -858,7 +874,7 @@ export default Kapsule({
       // X
       state.xAxis
         .scale(state.xScale)
-        .ticks(Math.round(state.graphW*0.0011))
+        .ticks(Math.round(state.graphW * 0.0011))
         .tickFormat(state.xTickFormat);
       state.xGrid
         .scale(state.xScale)
@@ -870,9 +886,9 @@ export default Kapsule({
         .style('fill-opacity', 0)
         .attr('transform', 'translate(0,' + state.graphH + ')')
         .transition().duration(state.transDuration)
-          .call(state.xAxis)
-          .style('stroke-opacity', 1)
-          .style('fill-opacity', 1);
+        .call(state.xAxis)
+        .style('stroke-opacity', 1)
+        .style('fill-opacity', 1);
 
       /* Angled x axis labels
        state.svg.select('g.x-axis').selectAll('text')
@@ -894,20 +910,20 @@ export default Kapsule({
         state.dateMarkerLine
           .style('display', 'block')
           .transition().duration(state.transDuration)
-            .attr('x1', state.xScale(state.dateMarker) + state.leftMargin)
-            .attr('x2', state.xScale(state.dateMarker) + state.leftMargin)
-            .attr('y1', state.topMargin + 1)
-            .attr('y2', state.graphH + state.topMargin)
+          .attr('x1', state.xScale(state.dateMarker) + state.leftMargin)
+          .attr('x2', state.xScale(state.dateMarker) + state.leftMargin)
+          .attr('y1', state.topMargin + 1)
+          .attr('y2', state.graphH + state.topMargin)
       } else {
         state.dateMarkerLine.style('display', 'none');
       }
 
       // Y
       const fontVerticalMargin = 0.6;
-      const labelDisplayRatio = Math.ceil(state.nLines*state.minLabelFont/Math.sqrt(2)/state.graphH/fontVerticalMargin);
+      const labelDisplayRatio = Math.ceil(state.nLines * state.minLabelFont / Math.sqrt(2) / state.graphH / fontVerticalMargin);
       const tickVals = state.yScale.domain().filter((d, i) => !(i % labelDisplayRatio));
-      let fontSize = Math.min(12, state.graphH/tickVals.length*fontVerticalMargin*Math.sqrt(2));
-      let maxChars = Math.ceil(state.rightMargin/(fontSize/Math.sqrt(2)));
+      let fontSize = Math.min(12, state.graphH / tickVals.length * fontVerticalMargin * Math.sqrt(2));
+      let maxChars = Math.ceil(state.rightMargin / (fontSize / Math.sqrt(2)));
 
       // state.yAxis.tickValues(tickVals);
       // state.yAxis.tickFormat(d => reduceLabel(d.split('+&+')[1], maxChars));
@@ -918,11 +934,11 @@ export default Kapsule({
       //     .call(state.yAxis);
 
       // Grp
-      const minHeight = d3Min(state.grpScale.range(), function (d,i) {
-        return i>0?d-state.grpScale.range()[i-1]:d*2;
+      const minHeight = d3Min(state.grpScale.range(), function (d, i) {
+        return i > 0 ? d - state.grpScale.range()[i - 1] : d * 2;
       });
-      fontSize = Math.min(14, minHeight*fontVerticalMargin*Math.sqrt(2));
-      maxChars = Math.floor(state.leftMargin/(fontSize/Math.sqrt(2)));
+      fontSize = Math.min(14, minHeight * fontVerticalMargin * Math.sqrt(2));
+      maxChars = Math.floor(state.leftMargin / (fontSize / Math.sqrt(2)));
 
       // state.grpAxis.tickFormat(d => reduceLabel(d, maxChars));
       state.grpAxis.tickFormat(d => d);
@@ -935,7 +951,7 @@ export default Kapsule({
       if (state.onLabelClick) {
         state.svg.selectAll('g.y-axis,g.grp-axis').selectAll('text')
           .style('cursor', 'pointer')
-          .on('click', function(d) {
+          .on('click', function (d) {
             const segms = d.split('+&+');
             state.onLabelClick(...segms.reverse());
           });
@@ -944,11 +960,11 @@ export default Kapsule({
       //
 
       function reduceLabel(label, maxChars) {
-        return label.length<=maxChars?label:(
-          label.substring(0, maxChars*2/3)
+        return label.length <= maxChars ? label : (
+          label.substring(0, maxChars * 2 / 3)
           + '...'
-          + label.substring(label.length - maxChars/3, label.length
-        ));
+          + label.substring(label.length - maxChars / 3, label.length
+          ));
       }
     }
 
@@ -968,38 +984,38 @@ export default Kapsule({
         .attr('y', 0)
         .attr('height', 0)
         .style('fill', 'url(#' + state.groupGradId + ')')
-        // .on('mouseover', state.groupTooltip.show)
-        // .on('mouseout', state.groupTooltip.hide);
+      // .on('mouseover', state.groupTooltip.show)
+      // .on('mouseout', state.groupTooltip.hide);
 
       newGroups.append('title')
-        .text('click-drag to zoom in');
+        .text('выделите область для приближения');
 
       groups = groups.merge(newGroups);
 
       groups.transition().duration(state.transDuration)
         .attr('width', state.graphW)
         .attr('height', function (d) {
-          return state.graphH*d.lines.length/state.nLines;
+          return state.graphH * d.lines.length / state.nLines;
         })
         .attr('y', function (d) {
-          return state.grpScale(d.group)-state.graphH*d.lines.length/state.nLines/2;
+          return state.grpScale(d.group) - state.graphH * d.lines.length / state.nLines / 2;
         });
     }
 
     function renderTimelines(maxElems) {
 
-      if (maxElems<0) maxElems=null;
+      if (maxElems < 0) maxElems = null;
 
       const hoverEnlargeRatio = .4;
 
       const dataFilter = (d, i) =>
-        (maxElems==null || i<maxElems) &&
-        (state.grpScale.domain().indexOf(d.group)+1 &&
-        d.timeRange[1]>=state.xScale.domain()[0] &&
-        d.timeRange[0]<=state.xScale.domain()[1] &&
-        state.yScale.domain().indexOf(d.group+'+&+'+d.label)+1);
+        (maxElems == null || i < maxElems) &&
+        (state.grpScale.domain().indexOf(d.group) + 1 &&
+          d.timeRange[1] >= state.xScale.domain()[0] &&
+          d.timeRange[0] <= state.xScale.domain()[1] &&
+          state.yScale.domain().indexOf(d.group + '+&+' + d.label) + 1);
 
-      state.lineHeight = state.graphH/state.nLines*0.8;
+      state.lineHeight = state.graphH / state.nLines * 0.8;
 
       let timelines = state.graph.selectAll('g.series-container').data(
         state.flatData.filter(dataFilter),
@@ -1014,66 +1030,111 @@ export default Kapsule({
       const newSegments = timelines.enter().append('g').attr('class', 'series-container')
 
       newSegments.append('rect')
-      .attr('class', 'series-segment')
-      .attr('rx', 1)
-      .attr('ry', 1)
-      .attr('x', () => state.graphW/2)
-      .attr('y', state.graphH/2)
-      .attr('width', 0)
-      .attr('height', 0)
-      .style('fill', d => state.zColorScale(d.val))
-      .style('fill-opacity', 0)
-      // .on('mouseover.groupTooltip', state.groupTooltip.show)
-      // .on('mouseout.groupTooltip', state.groupTooltip.hide)
-      // .on('mouseover.lineTooltip', state.lineTooltip.show)
-      // .on('mouseout.lineTooltip', state.lineTooltip.hide)
-      .on('mouseover.segmentTooltip', state.segmentTooltip.show)
-      .on('mouseout.segmentTooltip', state.segmentTooltip.hide);
+        .attr('class', 'series-segment')
+        .attr('rx', 1)
+        .attr('ry', 1)
+        .attr('x', () => state.graphW / 2)
+        .attr('y', state.graphH / 2)
+        .attr('width', 0)
+        .attr('height', 0)
+        .style('fill', d => state.zColorScale(d.val))
+        .style('fill-opacity', 0)
+        // .on('mouseover.groupTooltip', state.groupTooltip.show)
+        // .on('mouseout.groupTooltip', state.groupTooltip.hide)
+        // .on('mouseover.lineTooltip', state.lineTooltip.show)
+        // .on('mouseout.lineTooltip', state.lineTooltip.hide)
+        .on('mouseover.segmentTooltip', state.segmentTooltip.show)
+        .on('mouseout.segmentTooltip', state.segmentTooltip.hide);
 
-      function calculateRectCaption(d) {
-        const rectWidth = state.xScale(d.timeRange[1])-state.xScale(d.timeRange[0]);
+      function fitsIn(d) {
+        const rectWidth = state.xScale(d.timeRange[1]) - state.xScale(d.timeRange[0]);
         const letterWidth = state.lineHeight * 0.3;
-        const lettersToFit = Math.floor((rectWidth - 12)/letterWidth);
-        return d.val.length <= lettersToFit ? d.val : d.val.substring(0,lettersToFit - 1) + (lettersToFit - 1 > 0 ? '...' : '');
+        const lettersToFit = Math.floor((rectWidth - 12) / letterWidth);
+        return d.val.length <= lettersToFit;
       }
-      
+
+      function fitsLeft(d) {
+        const localArr = state.completeFlatData.filter(el => (el.group === d.group) && (el.label === d.label));
+        const localIdx = localArr.indexOf(d);
+        const letterWidth = state.lineHeight * 0.3;
+
+        const rectWidth = localIdx > 0
+          ? state.xScale(d.timeRange[0]) - state.xScale(localArr[localIdx - 1].timeRange[1])
+          : state.xScale(d.timeRange[0]);
+
+        const lettersToFit = Math.floor((rectWidth - 12) / letterWidth);
+        return d.val.length <= lettersToFit;
+      }
+
+      function fitsRight(d) {
+        const localArr = state.completeFlatData.filter(el => (el.group === d.group) && (el.label === d.label));
+        const localIdx = localArr.indexOf(d);
+        const letterWidth = state.lineHeight * 0.3;
+        const next = localArr[localIdx + 1];
+
+        const rectWidth = localIdx < localArr.length - 1
+          ? state.xScale(next.timeRange[0]) - state.xScale(d.timeRange[1]) - (!fitsIn(next) && fitsLeft(next) ? next.val.length * letterWidth + 6 : 0)
+          : state.graphW - state.xScale(d.timeRange[1]);
+
+        const lettersToFit = Math.floor((rectWidth - 12) / letterWidth);
+        return d.val.length <= lettersToFit;
+
+      }
+
+      function cutLabel(d) {
+        const rectWidth = state.xScale(d.timeRange[1]) - state.xScale(d.timeRange[0]);
+        const letterWidth = state.lineHeight * 0.3;
+        const lettersToFit = Math.floor((rectWidth - 12) / letterWidth);
+        return d.val.substring(0, lettersToFit - 1) + (lettersToFit - 1 > 0 ? '...' : '');
+      }
+
+      function calcShift(d) {
+        if (fitsIn(d)) return 6;
+        if (fitsLeft(d)) return -6;
+        if (fitsRight(d)) return state.xScale(d.timeRange[1]) - state.xScale(d.timeRange[0]) + 6
+        return 6;
+      }
+
+      function fitsOut(d) {
+        return fitsLeft(d) || fitsRight(d);
+      }
       // newSegments
 
 
       newSegments
-        .on('mouseover', function() {
+        .on('mouseover', function () {
           if ('disableHover' in state && state.disableHover)
             return;
 
           MoveToFront()(this);
 
-          const hoverEnlarge = state.lineHeight*hoverEnlargeRatio;
+          const hoverEnlarge = state.lineHeight * hoverEnlargeRatio;
 
           d3Select(this)
             .transition().duration(70)
             .attr('x', function (d) {
-              return state.xScale(d.timeRange[0])-hoverEnlarge/2;
+              return state.xScale(d.timeRange[0]) - hoverEnlarge / 2;
             })
             .attr('width', function (d) {
-              return d3Max([1, state.xScale(d.timeRange[1])-state.xScale(d.timeRange[0])])+hoverEnlarge;
+              return d3Max([1, state.xScale(d.timeRange[1]) - state.xScale(d.timeRange[0])]) + hoverEnlarge;
             })
             .attr('y', function (d) {
-              return state.yScale(d.group+'+&+'+d.label)-(state.lineHeight+hoverEnlarge)/2;
+              return state.yScale(d.group + '+&+' + d.label) - (state.lineHeight + hoverEnlarge) / 2;
             })
-            .attr('height', state.lineHeight+hoverEnlarge)
+            .attr('height', state.lineHeight + hoverEnlarge)
             .style('fill-opacity', 1);
         })
-        .on('mouseout', function() {
+        .on('mouseout', function () {
           d3Select(this)
             .transition().duration(250)
             .attr('x', function (d) {
               return state.xScale(d.timeRange[0]);
             })
             .attr('width', function (d) {
-              return d3Max([1, state.xScale(d.timeRange[1])-state.xScale(d.timeRange[0])]);
+              return d3Max([1, state.xScale(d.timeRange[1]) - state.xScale(d.timeRange[0])]);
             })
             .attr('y', function (d) {
-              return state.yScale(d.group+'+&+'+d.label)-state.lineHeight/2;
+              return state.yScale(d.group + '+&+' + d.label) - state.lineHeight / 2;
             })
             .attr('height', state.lineHeight)
             .style('fill-opacity', .8);
@@ -1089,37 +1150,34 @@ export default Kapsule({
           return state.xScale(d.timeRange[0]);
         })
         .attr('width', function (d) {
-          return d3Max([1, state.xScale(d.timeRange[1])-state.xScale(d.timeRange[0])]);
+          return d3Max([3, state.xScale(d.timeRange[1]) - state.xScale(d.timeRange[0])]);
         })
         .attr('y', function (d) {
-          return state.yScale(d.group+'+&+'+d.label)-state.lineHeight/2;
+          return state.yScale(d.group + '+&+' + d.label) - state.lineHeight / 2;
         })
         .attr('height', state.lineHeight)
         .style('fill-opacity', .8);
-        
+
       timelines.selectAll('text').remove(0)
 
       timelines
         .append('text')
-        .html((d) => calculateRectCaption(d))
-        .attr('fill',d => getCorrectTextColor(state.zColorScale(d.val)))
-        .attr('x', function (d) {
-          return state.xScale(d.timeRange[0]) + 6;
-        })
-        .style("font-size", state.lineHeight*0.6 + "px")
+        .html(d => fitsIn(d) || fitsOut(d) ? d.val : cutLabel(d))
+        .attr('fill', d => !fitsIn(d) && fitsOut(d) ? '#000' : getCorrectTextColor(state.zColorScale(d.val)))
+        .attr('x', d => state.xScale(d.timeRange[0]) + calcShift(d))
+        .attr('text-anchor', d => !fitsIn(d) && fitsLeft(d) ? 'end' : 'inherit')
+        .style("font-size", state.lineHeight * 0.6 + "px")
         .attr('y', function (d) {
-          return state.yScale(d.group+'+&+'+d.label)+(state.lineHeight*0.7)-state.lineHeight/2;
+          return state.yScale(d.group + '+&+' + d.label) + (state.lineHeight * 0.7) - state.lineHeight / 2;
         })
-        .style('font-family','sans-serif')
+        .style('font-family', 'sans-serif')
         .style('fill-opacity', 0);
 
-      timelines.selectAll('text').transition().duration(state.transDuration *2)
-        .attr('x', function (d) {
-          return state.xScale(d.timeRange[0]) + 6;
-        })
-        .style("font-size", state.lineHeight*0.6 + "px")
+      timelines.selectAll('text').transition().duration(state.transDuration * 2)
+        .attr('x', d => state.xScale(d.timeRange[0]) + calcShift(d))
+        .style("font-size", state.lineHeight * 0.6 + "px")
         .attr('y', function (d) {
-          return state.yScale(d.group+'+&+'+d.label)+(state.lineHeight*0.7)-state.lineHeight/2;
+          return state.yScale(d.group + '+&+' + d.label) + (state.lineHeight * 0.7) - state.lineHeight / 2;
         })
         .style('fill-opacity', .8);
     }
