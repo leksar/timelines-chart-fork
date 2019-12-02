@@ -44,6 +44,9 @@ import getCorrectTextColor from './textColor';
 
 export default Kapsule({
   props: {
+    photoData: {
+      default: []
+    },
     data: {
       default: [],
       onChange(data, state) {
@@ -62,7 +65,40 @@ export default Kapsule({
             .currentSelection(state.zoomX);
         }
 
+        state.colorPalette = [];
+        const predefinedColors = ["#4285f4", "#db4437", "#f4b400", "#0f9d58", "#ab47bc", "#00acc1", "#ff7043", "#9e9d24", "#5c6bc0", "#f06292", "#00796b", "c2185b"];
+        const amountOfShades = Math.floor([...new Set(state.completeFlatData.map(el => el.val))].length / 12);
+        if (amountOfShades > 0) {
+          predefinedColors.forEach(c => {
+            state.colorPalette.push(c);
+            for (let i = 1; i <= amountOfShades; i++) {
+              state.colorPalette.push(increase_brightness(c, (i)*15));
+            }
+          })
+        } else {
+          state.colorPalette = predefinedColors;
+        }
+
+        state.zColorScale = d3ScaleOrdinal(state.colorPalette);
         //
+        function increase_brightness(hex, percent) {
+          // strip the leading # if it's there
+          hex = hex.replace(/^\s*#|\s*$/g, '');
+
+          // convert 3 char codes --> 6, e.g. `E0F` --> `EE00FF`
+          if (hex.length == 3) {
+            hex = hex.replace(/(.)/g, '$1$1');
+          }
+
+          var r = parseInt(hex.substr(0, 2), 16),
+            g = parseInt(hex.substr(2, 2), 16),
+            b = parseInt(hex.substr(4, 2), 16);
+
+          return '#' +
+            ((0 | (1 << 8) + r + (256 - r) * percent / 100).toString(16)).substr(1) +
+            ((0 | (1 << 8) + g + (256 - g) * percent / 100).toString(16)).substr(1) +
+            ((0 | (1 << 8) + b + (256 - b) * percent / 100).toString(16)).substr(1);
+        }
 
         function parseData(rawData) {
 
@@ -106,7 +142,7 @@ export default Kapsule({
           });
 
           state.completeFlatData = dataWithLevels;
-          
+
           // for (let i=0, ilen=rawData.length; i<ilen; i++) {
           //   const group = rawData[i].group;
           //   state.completeStructData.push({
@@ -171,11 +207,11 @@ export default Kapsule({
     zColorScale: { default: d3ScaleSequential(interpolateRdYlBu) },
     zQualitative: {
       default: false,
-      onChange(discrete, state) {
-        state.zColorScale = discrete
-          ? d3ScaleOrdinal([...schemeCategory10, ...schemeDark2 ])
-          : d3ScaleSequential(interpolateRdYlBu); // alt: d3.interpolateInferno
-      }
+      // onChange(discrete, state) {
+      // state.zColorScale = discrete
+      //   ? d3ScaleOrdinal([...schemeCategory10, ...schemeDark2 ])
+      //   : d3ScaleSequential(interpolateRdYlBu); // alt: d3.interpolateInferno
+      // }
     },
     zDataLabel: { default: '', triggerUpdate: false }, // Units of z data. Used in the tooltip descriptions
     zScaleLabel: { default: '', triggerUpdate: false }, // Units of colorScale. Used in the legend label
@@ -1021,7 +1057,7 @@ export default Kapsule({
         state.flatData.filter(dataFilter),
         d => d.group + d.label + d.timeRange[0]
       );
-
+      
       timelines.exit()
         .transition().duration(state.transDuration)
         .style('opacity', 0)
@@ -1031,8 +1067,6 @@ export default Kapsule({
 
       newSegments.append('rect')
         .attr('class', 'series-segment')
-        .attr('rx', 1)
-        .attr('ry', 1)
         .attr('x', () => state.graphW / 2)
         .attr('y', state.graphH / 2)
         .attr('width', 0)

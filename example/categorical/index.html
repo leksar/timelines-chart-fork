@@ -1,15 +1,11 @@
 <head>
   <!-- <script src='//unpkg.com/timelines-chart'></script> -->
-  <script src='../../dist/timelines-chart.js'></script>
-
+  <script src='../../dist/timelines-chart.js'></script> <link href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
   <script src='../random-data.js'></script>
   <script src='https://cdnjs.cloudflare.com/ajax/libs/d3/4.13.0/d3.min.js'></script>
  </head>
 
 <body>
-  <div>
-    <i class='fa fa-truck'></i>
-  </div>
   <script>
           d3.timeFormatDefaultLocale({
         "decimal": ",",
@@ -54,6 +50,20 @@
       .maxLineHeight(30)
       .enableAnimations(false)
       .xTickFormat(multiFormat)
+      .photoData([
+        {group:'gaming1', Photo_timestamp: "2018-11-25T00:20:37.2609454"},
+        {group:'gaming2', Photo_timestamp: "2018-11-25T00:20:37.2609454"},
+        {group:'gaming3', Photo_timestamp: "2018-11-25T00:20:37.2609454"},
+        {group:'gaming4', Photo_timestamp: "2018-11-25T00:20:37.2609454"},
+        {group:'keyboard1', Photo_timestamp: "2018-11-25T00:20:37.2609454"},
+        {group:'keyboard2', Photo_timestamp: "2018-11-25T00:20:37.2609454"},
+        {group:'keyboard3', Photo_timestamp: "2018-11-25T00:20:37.2609454"},
+        {group:'keyboard4', Photo_timestamp: "2018-11-25T00:20:37.2609454"},
+        {group:'network1', Photo_timestamp: "2018-11-25T00:20:37.2609454"},
+        {group:'network2', Photo_timestamp: "2018-11-25T00:20:37.2609454"},
+        {group:'network3', Photo_timestamp: "2018-11-25T00:20:37.2609454"},
+        {group:'network4', Photo_timestamp: "2018-11-25T00:20:37.2609454"},
+      ])
       .data(myData);
   </script>
 </body>
