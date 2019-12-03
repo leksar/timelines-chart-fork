@@ -171,7 +171,7 @@ export default Kapsule({
     maxLineHeight: { default: 12 },
     leftMargin: { default: 90 },
     rightMargin: { default: 0 },
-    topMargin: { default: 26 },
+    topMargin: { default: 0 },
     bottomMargin: { default: 30 },
     useUtc: { default: false },
     xTickFormat: {},
@@ -751,7 +751,7 @@ export default Kapsule({
     renderTimelines();
     renderPhotoSpots();
 
-    adjustLegend();
+    // adjustLegend();
 
     //
 
@@ -1046,19 +1046,14 @@ export default Kapsule({
         new Date(d.Photo_timestamp) >= state.xScale.domain()[0] &&
         new Date(d.Photo_timestamp) <= state.xScale.domain()[1];
 
-      let spots = state.graph.selectAll('g .photo-spot').data(
+      let spots = state.graph.selectAll('g .photo-spot')
+      .remove()
+      .data(
         state.photoData.filter(dataFilter),
         d => d.Photo_timestamp
       );
 
-      console.log(state.photoData.filter(dataFilter));
-
-      spots.exit()
-        .transition().duration(state.transDuration)
-        .style('opacity', 0)
-        .remove();
-
-      const newPhotos = spots
+      spots
         .enter()
         .append('circle')
         .attr('class', 'photo-spot')
