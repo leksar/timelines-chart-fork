@@ -72,7 +72,7 @@ export default Kapsule({
           predefinedColors.forEach(c => {
             state.colorPalette.push(c);
             for (let i = 1; i <= amountOfShades; i++) {
-              state.colorPalette.push(increase_brightness(c, (i)*15));
+              state.colorPalette.push(increase_brightness(c, (i) * 15));
             }
           })
         } else {
@@ -749,6 +749,8 @@ export default Kapsule({
     renderGroups();
 
     renderTimelines();
+    renderPhotoSpots();
+
     adjustLegend();
 
     //
@@ -1038,6 +1040,40 @@ export default Kapsule({
         });
     }
 
+    function renderPhotoSpots() {
+
+      const dataFilter = (d, i) =>
+        new Date(d.Photo_timestamp) >= state.xScale.domain()[0] &&
+        new Date(d.Photo_timestamp) <= state.xScale.domain()[1];
+
+      let spots = state.graph.selectAll('g .photo-spot').data(
+        state.photoData.filter(dataFilter),
+        d => d.Photo_timestamp
+      );
+
+      console.log(state.photoData.filter(dataFilter));
+
+      spots.exit()
+        .transition().duration(state.transDuration)
+        .style('opacity', 0)
+        .remove();
+
+      const newPhotos = spots
+        .enter()
+        .append('circle')
+        .attr('class', 'photo-spot')
+        .attr('r', 2)
+        .attr('cx', function (d) {
+          return state.xScale(new Date(d.Photo_timestamp));
+        })
+        .attr('cy', function (d) {
+          return state.graphH;
+        })
+        .style('fill', '#000')
+        .style('fill-opacity', .8);
+
+    }
+
     function renderTimelines(maxElems) {
 
       if (maxElems < 0) maxElems = null;
@@ -1057,7 +1093,7 @@ export default Kapsule({
         state.flatData.filter(dataFilter),
         d => d.group + d.label + d.timeRange[0]
       );
-      
+
       timelines.exit()
         .transition().duration(state.transDuration)
         .style('opacity', 0)
