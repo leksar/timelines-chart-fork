@@ -1046,12 +1046,12 @@ export default Kapsule({
         new Date(d.Photo_timestamp) >= state.xScale.domain()[0] &&
         new Date(d.Photo_timestamp) <= state.xScale.domain()[1];
 
+      state.graph.selectAll('g .photo-spot').remove();
       let spots = state.graph.selectAll('g .photo-spot')
-      .remove()
-      .data(
-        state.photoData.filter(dataFilter),
-        d => d.Photo_timestamp
-      );
+        .data(
+          state.photoData.filter(dataFilter),
+          d => d.Photo_timestamp
+        );
 
       spots
         .enter()
