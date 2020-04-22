@@ -117,7 +117,7 @@ export default Kapsule({
 
             const flat = g.data.map(el => el.data.map(m => { return { timeRange: [new Date(m.timeRange[0]), new Date(m.timeRange[1])], val: m.val }; })).flat().sort((a, b) => a.timeRange[0] - b.timeRange[0]);
 
-            if (g.settings.includes('flat')) {
+            if (g.settings && g.settings.includes('flat')) {
               dataWithLevels.push(...flat.map(el => { return {group: g.group, ...el, label: 1}}));
             } else {  
               flat.forEach(el => {
@@ -1226,7 +1226,7 @@ export default Kapsule({
           return state.yScale(d.group + '+&+' + d.label) - state.lineHeight / 2;
         })
         .attr('height', state.lineHeight)
-        .style('fill-opacity', .8);
+        .style('fill-opacity', 1);
 
       timelines.selectAll('text').remove(0)
 
