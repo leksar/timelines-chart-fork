@@ -117,27 +117,32 @@ export default Kapsule({
 
             const flat = g.data.map(el => el.data.map(m => { return { timeRange: [new Date(m.timeRange[0]), new Date(m.timeRange[1])], val: m.val }; })).flat().sort((a, b) => a.timeRange[0] - b.timeRange[0]);
 
-            flat.forEach(el => {
-              const maxLevel = Math.max(1, ...dataWithLevels.filter(f => f.group === g.group).map(m => m.label));
-              let elementAdded = false;
-              for (let i = 1; i <= maxLevel; i++) {
-                let isIntersects = false;
-                dataWithLevels.filter(f => (f.label === i) && (f.group === g.group)).forEach(elwl => {
-                  if (el.timeRange[0] < elwl.timeRange[1] && el.timeRange[1] > elwl.timeRange[0]) isIntersects = true;
-                });
-                if (!isIntersects) {
-                  dataWithLevels.push({ group: g.group, ...el, label: i });
-                  elementAdded = true;
+            if (g.settings.includes('flat')) {
+              dataWithLevels.push(...flat.map(el => { return {group: g.group, ...el, label: 1}}));
+            } else {  
+              flat.forEach(el => {
+                  const maxLevel = Math.max(1, ...dataWithLevels.filter(f => f.group === g.group).map(m => m.label));
+                  let elementAdded = false;
+                  for (let i = 1; i <= maxLevel; i++) {
+                      let isIntersects = false;
+                      dataWithLevels.filter(f => (f.label === i) && (f.group === g.group)).forEach(elwl => {
+                          if (el.timeRange[0] < elwl.timeRange[1] && el.timeRange[1] > elwl.timeRange[0]) isIntersects = true;
+                        });
+                        if (!isIntersects) {
+                            dataWithLevels.push({ group: g.group, ...el, label: i });
+                            elementAdded = true;
                   break;
                 }
               }
-
+            
               if (!elementAdded) {
-                dataWithLevels.push({ group: g.group, ...el, label: maxLevel + 1 });
-                state.completeStructData.find(s => s.group === g.group).lines.push(maxLevel + 1);
-                state.totalNLines++;
-              }
-            })
+                  dataWithLevels.push({ group: g.group, ...el, label: maxLevel + 1 });
+                  state.completeStructData.find(s => s.group === g.group).lines.push(maxLevel + 1);
+                  state.totalNLines++;
+                }
+              })
+            }
+
 
           });
 

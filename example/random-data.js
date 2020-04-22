@@ -11,7 +11,8 @@ function getRandomData(ordinal = false) {
 
   return [...Array(NGROUPS).keys()].map(i => ({
     group: categoryLabels[Math.ceil(Math.random()*nCategories)] + (i+1),
-    data: getGroupData()
+    data: getGroupData(),
+    settings: Math.random() * 2 > 1 ? ['flat']: []
   }));
 
   //
