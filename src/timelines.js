@@ -66,7 +66,7 @@ export default Kapsule({
         }
 
         state.colorPalette = [];
-        const predefinedColors = ["#4285f4", "#db4437", "#f4b400", "#0f9d58", "#ab47bc", "#00acc1", "#ff7043", "#9e9d24", "#5c6bc0", "#f06292", "#00796b", "c2185b"];
+        const predefinedColors = ["#4285f4", "#db4437", "#f4b400", "#ab47bc", "#00acc1", "#0f9d58", "#ff7043", "#9e9d24", "#5c6bc0", "#f06292", "#00796b", "c2185b"];
         const amountOfShades = Math.floor([...new Set(state.completeFlatData.map(el => el.val))].length / 12);
         if (amountOfShades > 0) {
           predefinedColors.forEach(c => {
@@ -617,10 +617,10 @@ export default Kapsule({
             state.svg.dispatch('zoomScent', {
               detail: {
                 zoomX: [startCoords[0], newCoords[0]].sort(d3Ascending).map(state.xScale.invert),
-                zoomY: [startCoords[1], newCoords[1]].sort(d3Ascending).map(d =>
-                  state.yScale.domain().indexOf(state.yScale.invert(d))
-                  + ((state.zoomY && state.zoomY[0]) ? state.zoomY[0] : 0)
-                )
+                // zoomY: [startCoords[1], newCoords[1]].sort(d3Ascending).map(d =>
+                //   state.yScale.domain().indexOf(state.yScale.invert(d))
+                //   + ((state.zoomY && state.zoomY[0]) ? state.zoomY[0] : 0)
+                // )
               }
             });
           })
@@ -635,8 +635,8 @@ export default Kapsule({
               Math.max(0, Math.min(state.graphH, d3Mouse(e)[1]))
             ];
 
-            if (startCoords[0] == endCoords[0] && startCoords[1] == endCoords[1])
-              return;
+            if (startCoords[0] == endCoords[0] && startCoords[1] == endCoords[1]) return;
+            if (Math.abs(startCoords[0] - endCoords[0]) < 10) return;
 
             const newDomainX = [startCoords[0], endCoords[0]].sort(d3Ascending).map(state.xScale.invert);
 
@@ -652,7 +652,7 @@ export default Kapsule({
               state.svg.dispatch('zoom', {
                 detail: {
                   zoomX: changeX ? newDomainX : null,
-                  zoomY: changeY ? newDomainY : null
+                  // zoomY: changeY ? newDomainY : null
                 }
               });
             }
@@ -716,7 +716,7 @@ export default Kapsule({
             d3Min(state.flatData, d => d.timeRange[0]),
             d3Max(state.flatData, d => d.timeRange[1])
           ],
-          newZoomY = [null, null];
+          newZoomY = [null, state.showSubgroups ? null : state.totalNLines - state.totalSubgroups - 1];
 
         if (prevZoomX[0] < newZoomX[0] || prevZoomX[1] > newZoomX[1]
           || prevZoomY[0] != newZoomY[0] || prevZoomY[1] != newZoomX[1]) {
