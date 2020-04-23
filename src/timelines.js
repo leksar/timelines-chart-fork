@@ -180,6 +180,7 @@ export default Kapsule({
     bottomMargin: { default: 30 },
     useUtc: { default: false },
     xTickFormat: {},
+    firstRender: { default: true },
     dateMarker: {},
     timeFormat: { default: '%Y-%m-%d %-I:%M:%S %p', triggerUpdate: false },
     zoomX: {  // Which time-range to show (null = min/max)
@@ -755,6 +756,16 @@ export default Kapsule({
 
     renderTimelines();
     renderPhotoSpots();
+
+    if (state.firstRender) {
+      state.firstRender = false;
+      state.svg.dispatch('zoom', {
+        detail: {
+          zoomX: null,
+          zoomY: [0, state.totalNLines - state.totalSubgroups - 1],
+        }
+      });
+    }
 
     // adjustLegend();
 
