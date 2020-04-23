@@ -114,28 +114,39 @@ export default Kapsule({
               lines: [1]
             });
             state.totalNLines++;
-
-            const flat = g.data.map(el => el.data.map(m => { return { timeRange: [new Date(m.timeRange[0]), new Date(m.timeRange[1])], val: m.val }; })).flat().sort((a, b) => a.timeRange[0] - b.timeRange[0]);
+            // const flat = g.data.map(el => el.data.map(m => { return { timeRange: [new Date(m.timeRange[0]), new Date(m.timeRange[1])], val: m.val }; })).flat().sort((a, b) => a.timeRange[0] - b.timeRange[0]);
+            const flat = g.data.map(el => el.data.map(m => { return { timeRange: [new Date(m.timeRange[0]), new Date(m.timeRange[1])], val: m.val }; })).flat();
 
             if (g.settings && g.settings.includes('flat')) {
-              dataWithLevels.push(...flat.map(el => { return {group: g.group, ...el, label: 1}}));
-            } else {  
+              dataWithLevels.push(...flat.map(el => { return { group: g.group, ...el, label: 1, flat: true } }));
+              const subGroups = [...new Set(flat.map(el => el.val))]
+              subGroups.reverse().forEach(sg => {
+                dataWithLevels.push(...flat.filter(el => el.val === sg).map(el => { return { group: sg, ...el, label: 1, subgroup: true } }))
+                state.completeStructData.push({
+                  group: sg,
+                  lines: [1],
+                  subgroup: true
+                });
+                state.totalSubgroups++;
+                state.totalNLines++;
+              });
+            } else {
               flat.forEach(el => {
-                  const maxLevel = Math.max(1, ...dataWithLevels.filter(f => f.group === g.group).map(m => m.label));
-                  let elementAdded = false;
-                  for (let i = 1; i <= maxLevel; i++) {
-                      let isIntersects = false;
-                      dataWithLevels.filter(f => (f.label === i) && (f.group === g.group)).forEach(elwl => {
-                          if (el.timeRange[0] < elwl.timeRange[1] && el.timeRange[1] > elwl.timeRange[0]) isIntersects = true;
-                        });
-                        if (!isIntersects) {
-                            dataWithLevels.push({ group: g.group, ...el, label: i });
-                            elementAdded = true;
-                  break;
+                const maxLevel = Math.max(1, ...dataWithLevels.filter(f => f.group === g.group).map(m => m.label));
+                let elementAdded = false;
+                for (let i = 1; i <= maxLevel; i++) {
+                  let isIntersects = false;
+                  dataWithLevels.filter(f => (f.label === i) && (f.group === g.group)).forEach(elwl => {
+                    if (el.timeRange[0] < elwl.timeRange[1] && el.timeRange[1] > elwl.timeRange[0]) isIntersects = true;
+                  });
+                  if (!isIntersects) {
+                    dataWithLevels.push({ group: g.group, ...el, label: i });
+                    elementAdded = true;
+                    break;
+                  }
                 }
-              }
-            
-              if (!elementAdded) {
+
+                if (!elementAdded) {
                   dataWithLevels.push({ group: g.group, ...el, label: maxLevel + 1 });
                   state.completeStructData.find(s => s.group === g.group).lines.push(maxLevel + 1);
                   state.totalNLines++;
@@ -182,6 +193,8 @@ export default Kapsule({
     xTickFormat: {},
     firstRender: { default: true },
     dateMarker: {},
+    showSubgroups: false,
+    totalSubgroups: 0,
     timeFormat: { default: '%Y-%m-%d %-I:%M:%S %p', triggerUpdate: false },
     zoomX: {  // Which time-range to show (null = min/max)
       default: [null, null],
@@ -1024,7 +1037,7 @@ export default Kapsule({
 
     function renderGroups() {
 
-      let groups = state.graph.selectAll('rect.series-group').data(state.structData, d => d.group);
+      let groups = state.graph.selectAll('rect.series-group').data(state.completeStructData, d => d.group);
 
       groups.exit()
         .transition().duration(state.transDuration)
@@ -1037,6 +1050,7 @@ export default Kapsule({
         .attr('x', 0)
         .attr('y', 0)
         .attr('height', 0)
+        .attr('display', d => d.subgroup ? 'none' : 'block')
         .style('fill', 'url(#' + state.groupGradId + ')')
       // .on('mouseover', state.groupTooltip.show)
       // .on('mouseout', state.groupTooltip.hide);
@@ -1099,7 +1113,6 @@ export default Kapsule({
           state.yScale.domain().indexOf(d.group + '+&+' + d.label) + 1);
 
       state.lineHeight = state.graphH / state.nLines * 0.8;
-
       let timelines = state.graph.selectAll('g.series-container').data(
         state.flatData.filter(dataFilter),
         d => d.group + d.label + d.timeRange[0]
@@ -1120,6 +1133,7 @@ export default Kapsule({
         .attr('height', 0)
         .style('fill', d => state.zColorScale(d.val))
         .style('fill-opacity', 0)
+        .style('opacity', d => d.subgroup ? .6 : 1)
         // .on('mouseover.groupTooltip', state.groupTooltip.show)
         // .on('mouseout.groupTooltip', state.groupTooltip.hide)
         // .on('mouseover.lineTooltip', state.lineTooltip.show)
@@ -1170,14 +1184,36 @@ export default Kapsule({
       }
 
       function calcShift(d) {
-        if (fitsIn(d)) return 6;
+        if (fitsIn(d) || d.flat) return 6;
         if (fitsLeft(d)) return -6;
         if (fitsRight(d)) return state.xScale(d.timeRange[1]) - state.xScale(d.timeRange[0]) + 6
         return 6;
       }
 
       function fitsOut(d) {
+        if (d.flat) return false;
         return fitsLeft(d) || fitsRight(d);
+      }
+
+      function toggleSubgroups() {
+        state.showSubgroups = !state.showSubgroups;
+        if (state.showSubgroups) {
+          // Array.from(document.getElementsByClassName('subgroup-segment')).forEach(el => el.style.opacity = 0);
+          state.svg.dispatch('zoom', {
+            detail: {
+              zoomX: null,
+              zoomY: [0, state.totalNLines],
+            }
+          });
+        } else {
+          // Array.from(document.getElementsByClassName('subgroup-segment')).forEach(el => el.style.opacity = 1);
+          state.svg.dispatch('zoom', {
+            detail: {
+              zoomX: null,
+              zoomY: [0, state.totalNLines - state.totalSubgroups - 1],
+            }
+          });
+        }
       }
       // newSegments
 
@@ -1221,6 +1257,8 @@ export default Kapsule({
             .style('fill-opacity', .8);
         })
         .on('click', function (s) {
+          toggleSubgroups();
+
           if (state.onSegmentClick)
             state.onSegmentClick(s);
         });
@@ -1243,7 +1281,7 @@ export default Kapsule({
 
       timelines
         .append('text')
-        .html(d => fitsIn(d) || fitsOut(d) ? d.val : cutLabel(d))
+        .html(d => d.flat ? '' : fitsIn(d) || fitsOut(d) ? d.val : cutLabel(d))
         .attr('fill', d => !fitsIn(d) && fitsOut(d) ? '#000' : getCorrectTextColor(state.zColorScale(d.val)))
         .attr('x', d => state.xScale(d.timeRange[0]) + calcShift(d))
         .attr('text-anchor', d => !fitsIn(d) && fitsLeft(d) ? 'end' : 'inherit')
@@ -1261,6 +1299,7 @@ export default Kapsule({
           return state.yScale(d.group + '+&+' + d.label) + (state.lineHeight * 0.7) - state.lineHeight / 2;
         })
         .style('fill-opacity', .8);
+
     }
   }
 });
