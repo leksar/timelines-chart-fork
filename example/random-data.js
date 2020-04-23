@@ -9,12 +9,12 @@ function getRandomData(ordinal = false) {
   const nCategories = Math.ceil(Math.random()*MAXCATEGORIES),
     categoryLabels = ['monitor','program','application','keyboard','javascript','gaming','network','3.1.20','213','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'];
 
-  return [...Array(NGROUPS).keys()].map(i => ({
+  const res = [...Array(NGROUPS).keys()].map(i => ({
     group: categoryLabels[Math.ceil(Math.random()*nCategories)] + (i+1),
-    data: getGroupData(),
-    settings: Math.random() * 2 > 1 ? ['flat']: []
+    data: getGroupData()
   }));
-
+  res.push({group:'flat', data: getGroupData(), settings: ['flat']});
+  return res;
   //
 
   function getGroupData() {
