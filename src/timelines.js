@@ -1257,8 +1257,9 @@ export default Kapsule({
             .style('fill-opacity', .8);
         })
         .on('click', function (s) {
-          toggleSubgroups();
-
+          if (s.flat) {
+            toggleSubgroups();
+          }
           if (state.onSegmentClick)
             state.onSegmentClick(s);
         });
