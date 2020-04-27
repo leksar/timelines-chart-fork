@@ -53,7 +53,7 @@ export default Kapsule({
         parseData(data);
         state.zoomX = [
           Math.min((state.zoomX && state.zoomX[0]), d3Min(state.completeFlatData, d => d.timeRange[0])),
-          Math.max((state.zoomX && state.zoomX[1]), d3Max(state.completeFlatData, d => d.timeRange[1]))
+          Math.max((state.zoomX && state.zoomX[1]), state.cutDate || d3Max(state.completeFlatData, d => d.timeRange[1]))
         ];
 
         state.zoomY = [null, null];
@@ -195,6 +195,7 @@ export default Kapsule({
     dateMarker: {},
     showSubgroups: false,
     totalSubgroups: 0,
+    cutDate: false,
     timeFormat: { default: '%Y-%m-%d %-I:%M:%S %p', triggerUpdate: false },
     zoomX: {  // Which time-range to show (null = min/max)
       default: [null, null],
@@ -241,7 +242,13 @@ export default Kapsule({
         state.transDuration = val ? 700 : 0;
       }
     },
-
+    cutByTime: {
+      default: false,
+      onChange(val, state) {
+        state.cutDate = val;
+        console.log(state.cutDate);
+      }
+    },
     // Callbacks
     onZoom: {}, // When user zooms in / resets zoom. Returns ([startX, endX], [startY, endY])
     onLabelClick: {}, // When user clicks on a group or y label. Returns (group) or (label, group) respectively
@@ -728,7 +735,7 @@ export default Kapsule({
           ? state.overviewArea.domainRange()
           : [
             d3Min(state.flatData, d => d.timeRange[0]),
-            d3Max(state.flatData, d => d.timeRange[1])
+            state.cutDate || d3Max(state.flatData, d => d.timeRange[1])
           ],
           newZoomY = [null, state.showSubgroups ? null : state.totalNLines - state.totalSubgroups - 1];
 
