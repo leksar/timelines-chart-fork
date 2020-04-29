@@ -55,10 +55,9 @@ export default Kapsule({
           state.PredefinedStartDate || Math.min((state.zoomX && state.zoomX[0]), d3Min(state.completeFlatData, d => d.timeRange[0])),
           Math.max((state.zoomX && state.zoomX[1]), state.PredefinedEndDate || d3Max(state.completeFlatData, d => d.timeRange[1]))
         ];
-        
-        state.zoomY = [null, null];
 
-        state.leftMargin = data.reduce((max, el) => Math.max(max, el.group.length), 0) * 7 + 10;
+        state.zoomY = [null, null];
+        state.leftMargin = Math.max(data.reduce((max, el) => Math.max(max, el.group.length), 0) * 7 + 10, state.leftMargin);
         if (state.overviewArea) {
           state.overviewArea
             .domainRange(state.zoomX)
@@ -185,7 +184,7 @@ export default Kapsule({
     width: { default: window.innerWidth - 40 },
     maxHeight: { default: 640 },
     maxLineHeight: { default: 12 },
-    leftMargin: { default: 90 },
+    leftMargin: { default: 0 },
     rightMargin: { default: 0 },
     topMargin: { default: 0 },
     bottomMargin: { default: 30 },
