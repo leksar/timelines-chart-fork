@@ -117,18 +117,20 @@ export default Kapsule({
             const flat = g.data.map(el => el.data.map(m => { return { timeRange: [new Date(m.timeRange[0]), new Date(m.timeRange[1])], val: m.val }; })).flat();
 
             if (g.settings && g.settings.includes('flat')) {
-              dataWithLevels.push(...flat.map(el => { return { group: g.group, ...el, label: 1, flat: true } }));
-              const subGroups = [...new Set(flat.map(el => el.val))]
-              subGroups.reverse().forEach(sg => {
-                dataWithLevels.push(...flat.filter(el => el.val === sg).map(el => { return { group: sg, ...el, label: 1, subgroup: true } }))
-                state.completeStructData.push({
-                  group: sg,
-                  lines: [1],
-                  subgroup: true
+              dataWithLevels.push(...flat.map(el => { return { group: g.group, ...el, label: 1, flat: true, expandable: g.settings.includes('expandable') } }));
+              if (g.settings.includes('expandable')) {
+                const subGroups = [...new Set(flat.map(el => el.val))]
+                subGroups.reverse().forEach(sg => {
+                  dataWithLevels.push(...flat.filter(el => el.val === sg).map(el => { return { group: sg, ...el, label: 1, subgroup: true } }))
+                  state.completeStructData.push({
+                    group: sg,
+                    lines: [1],
+                    subgroup: true
+                  });
+                  state.totalSubgroups++;
+                  state.totalNLines++;
                 });
-                state.totalSubgroups++;
-                state.totalNLines++;
-              });
+              }
             } else {
               flat.forEach(el => {
                 const maxLevel = Math.max(1, ...dataWithLevels.filter(f => f.group === g.group).map(m => m.label));
@@ -1269,7 +1271,7 @@ export default Kapsule({
             .style('fill-opacity', .8);
         })
         .on('click', function (s) {
-          if (s.flat) {
+          if (s.expandable) {
             toggleSubgroups();
           }
           if (state.onSegmentClick)
