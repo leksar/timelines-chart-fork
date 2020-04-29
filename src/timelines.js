@@ -52,10 +52,10 @@ export default Kapsule({
       onChange(data, state) {
         parseData(data);
         state.zoomX = [
-          Math.min((state.zoomX && state.zoomX[0]), d3Min(state.completeFlatData, d => d.timeRange[0])),
-          Math.max((state.zoomX && state.zoomX[1]), state.cutDate || d3Max(state.completeFlatData, d => d.timeRange[1]))
+          state.PredefinedStartDate || Math.min((state.zoomX && state.zoomX[0]), d3Min(state.completeFlatData, d => d.timeRange[0])),
+          Math.max((state.zoomX && state.zoomX[1]), state.PredefinedEndDate || d3Max(state.completeFlatData, d => d.timeRange[1]))
         ];
-
+        
         state.zoomY = [null, null];
 
         state.leftMargin = data.reduce((max, el) => Math.max(max, el.group.length), 0) * 7 + 10;
@@ -195,7 +195,8 @@ export default Kapsule({
     dateMarker: {},
     showSubgroups: false,
     totalSubgroups: 0,
-    cutDate: false,
+    PredefinedEndDate: false,
+    PredefinedStartDate: false,
     timeFormat: { default: '%Y-%m-%d %-I:%M:%S %p', triggerUpdate: false },
     zoomX: {  // Which time-range to show (null = min/max)
       default: [null, null],
@@ -242,11 +243,16 @@ export default Kapsule({
         state.transDuration = val ? 700 : 0;
       }
     },
-    cutByTime: {
+    setStartTime: {
       default: false,
       onChange(val, state) {
-        state.cutDate = val;
-        console.log(state.cutDate);
+        state.PredefinedStartDate = val;
+      }
+    },
+    setEndTime: {
+      default: false,
+      onChange(val, state) {
+        state.PredefinedEndDate = val;
       }
     },
     // Callbacks
@@ -734,8 +740,8 @@ export default Kapsule({
         const newZoomX = state.enableOverview
           ? state.overviewArea.domainRange()
           : [
-            d3Min(state.flatData, d => d.timeRange[0]),
-            state.cutDate || d3Max(state.flatData, d => d.timeRange[1])
+            state.PredefinedStartDate || d3Min(state.flatData, d => d.timeRange[0]),
+            state.PredefinedEndDate || d3Max(state.flatData, d => d.timeRange[1])
           ],
           newZoomY = [null, state.showSubgroups ? null : state.totalNLines - state.totalSubgroups - 1];
 
