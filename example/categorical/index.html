@@ -1,72 +1,99 @@
 <head>
   <!-- <script src='//unpkg.com/timelines-chart'></script> -->
-  <script src='../../dist/timelines-chart.js'></script> <link href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+  <script src='../../dist/timelines-chart.js'></script>
+  <link href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet"
+    integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
   <script src='../random-data.js'></script>
   <script src='https://cdnjs.cloudflare.com/ajax/libs/d3/4.13.0/d3.min.js'></script>
- </head>
+</head>
 
 <body>
   <script>
-          d3.timeFormatDefaultLocale({
-        "decimal": ",",
-        "thousands": "\xa0",
-        "grouping": [3],
-        "currency": ["", " руб."],
-        "dateTime": "%A, %e %B %Y г. %X",
-        "date": "%d.%m.%Y",
-        "time": "%H:%M:%S",
-        "periods": ["AM", "PM"],
-        "days": ["воскресенье", "понедельник", "вторник", "среда", "четверг", "пятница", "суббота"],
-        "shortDays": ["вс", "пн", "вт", "ср", "чт", "пт", "сб"],
-        "months": ["января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря"],
-        "shortMonths": ["янв", "фев", "мар", "апр", "май", "июн", "июл", "авг", "сен", "окт", "ноя", "дек"]
+    d3.timeFormatDefaultLocale({
+      "decimal": ",",
+      "thousands": "\xa0",
+      "grouping": [3],
+      "currency": ["", " руб."],
+      "dateTime": "%A, %e %B %Y г. %X",
+      "date": "%d.%m.%Y",
+      "time": "%H:%M:%S",
+      "periods": ["AM", "PM"],
+      "days": ["воскресенье", "понедельник", "вторник", "среда", "четверг", "пятница", "суббота"],
+      "shortDays": ["вс", "пн", "вт", "ср", "чт", "пт", "сб"],
+      "months": ["января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря"],
+      "shortMonths": ["янв", "фев", "мар", "апр", "май", "июн", "июл", "авг", "сен", "окт", "ноя", "дек"]
     });
 
     var formatMillisecond = d3.timeFormat(".%L"),
-        formatSecond = d3.timeFormat(":%S"),
-        formatMinute = d3.timeFormat("%H:%M"),
-        formatHour = d3.timeFormat("%H"),
-        formatDay = d3.timeFormat("%a %d"),
-        formatWeek = d3.timeFormat("%b %d"),
-        formatMonth = d3.timeFormat("%B"),
-        formatYear = d3.timeFormat("%Y");
+      formatSecond = d3.timeFormat(":%S"),
+      formatMinute = d3.timeFormat("%H:%M"),
+      formatHour = d3.timeFormat("%H"),
+      formatDay = d3.timeFormat("%a %d"),
+      formatWeek = d3.timeFormat("%b %d"),
+      formatMonth = d3.timeFormat("%B"),
+      formatYear = d3.timeFormat("%Y");
 
     // Define filter conditions
     function multiFormat(date) {
-        return (d3.timeSecond(date) < date ? formatMillisecond
-            : d3.timeMinute(date) < date ? formatSecond
-                : d3.timeHour(date) < date ? formatMinute
-                    : d3.timeDay(date) < date ? formatHour
-                        : d3.timeMonth(date) < date ? (d3.timeWeek(date) < date ? formatDay : formatWeek)
-                            : d3.timeYear(date) < date ? formatMonth
-                                : formatYear)(date);
+      return (d3.timeSecond(date) < date ? formatMillisecond
+        : d3.timeMinute(date) < date ? formatSecond
+          : d3.timeHour(date) < date ? formatMinute
+            : d3.timeDay(date) < date ? formatHour
+              : d3.timeMonth(date) < date ? (d3.timeWeek(date) < date ? formatDay : formatWeek)
+                : d3.timeYear(date) < date ? formatMonth
+                  : formatYear)(date);
     }
 
-    const myData = getRandomData(true);
+    let myData = getRandomData(true);
 
-    TimelinesChart()(document.body)
+    const getTestGroup = () => {
+
+      const randDate = new Date();
+      randDate.setDate(randDate.getDate() + Math.floor(Math.random() * 300 - 100));
+      return {
+        group: 'test',
+        data: [{
+          label: 'label',
+          data: [{
+            timeRange: [new Date('2020-01-01'), randDate],
+            val: 'testData'
+          }]
+        }]
+      }
+    }
+
+    myData.push(getTestGroup());
+
+    const chart = TimelinesChart()(document.body)
       .zScaleLabel('My Scale Units')
       .zQualitative(true)
       .maxLineHeight(30)
       .enableAnimations(false)
       .xTickFormat(multiFormat)
       .leftMargin(10)
+      .dateMarker(new Date())
+      .enableOverview(false)
       .setStartTime(new Date('2012-01-01'))
-      .setEndTime(new Date('2019-01-01'))
+      .setEndTime(new Date('2021-01-01'))
       .photoData([
-        {group:'gaming1', Photo_timestamp: "2018-11-25T00:20:37.2609454"},
-        {group:'gaming2', Photo_timestamp: "2018-11-25T00:20:37.2609454"},
-        {group:'gaming3', Photo_timestamp: "2018-11-25T00:20:37.2609454"},
-        {group:'gaming4', Photo_timestamp: "2018-11-25T00:20:37.2609454"},
-        {group:'keyboard1', Photo_timestamp: "2018-11-25T00:20:37.2609454"},
-        {group:'keyboard2', Photo_timestamp: "2018-11-25T00:20:37.2609454"},
-        {group:'keyboard3', Photo_timestamp: "2018-11-25T00:20:37.2609454"},
-        {group:'keyboard4', Photo_timestamp: "2018-11-25T00:20:37.2609454"},
-        {group:'network1', Photo_timestamp: "2018-11-25T00:20:37.2609454"},
-        {group:'network2', Photo_timestamp: "2018-11-25T00:20:37.2609454"},
-        {group:'network3', Photo_timestamp: "2018-11-25T00:20:37.2609454"},
-        {group:'network4', Photo_timestamp: "2018-11-25T00:20:37.2609454"},
+        { group: 'gaming1', Photo_timestamp: "2018-11-25T00:20:37.2609454" },
+        { group: 'gaming2', Photo_timestamp: "2018-11-25T00:20:37.2609454" },
+        { group: 'gaming3', Photo_timestamp: "2018-11-25T00:20:37.2609454" },
+        { group: 'gaming4', Photo_timestamp: "2018-11-25T00:20:37.2609454" },
+        { group: 'keyboard1', Photo_timestamp: "2018-11-25T00:20:37.2609454" },
+        { group: 'keyboard2', Photo_timestamp: "2018-11-25T00:20:37.2609454" },
+        { group: 'keyboard3', Photo_timestamp: "2018-11-25T00:20:37.2609454" },
+        { group: 'keyboard4', Photo_timestamp: "2018-11-25T00:20:37.2609454" },
+        { group: 'network1', Photo_timestamp: "2018-11-25T00:20:37.2609454" },
+        { group: 'network2', Photo_timestamp: "2018-11-25T00:20:37.2609454" },
+        { group: 'network3', Photo_timestamp: "2018-11-25T00:20:37.2609454" },
+        { group: 'network4', Photo_timestamp: "2018-11-25T00:20:37.2609454" },
       ])
       .data(myData);
+    setInterval(() => {
+      myData = myData.filter(el => el.group !== 'test');
+      myData.push(getTestGroup());
+      chart.data(myData);
+    }, 2000);
   </script>
 </body>
