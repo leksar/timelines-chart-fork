@@ -1129,7 +1129,7 @@ export default Kapsule({
       state.lineHeight = state.graphH / state.nLines * 0.8;
       let timelines = state.graph.selectAll('g.series-container').data(
         state.flatData.filter(dataFilter),
-        d => d.group + d.label + d.timeRange[0] + d.timeRange[0]
+        d => d.group + d.label + d.timeRange[0] + d.timeRange[1]
       );
 
       timelines.exit()
