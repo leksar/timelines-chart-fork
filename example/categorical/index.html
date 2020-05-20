@@ -71,6 +71,7 @@
       .enableAnimations(false)
       .xTickFormat(multiFormat)
       .leftMargin(10)
+      .zColorScale(d3.scaleOrdinal().domain(['keyboard', 'javascript', 'gaming']).range(['#ff0000', '#00ff00', '#0000ff']).unknown('grey'))
       .dateMarker(new Date())
       .enableOverview(false)
       .setStartTime(new Date('2012-01-01'))
@@ -94,6 +95,6 @@
       myData = myData.filter(el => el.group !== 'test');
       myData.push(getTestGroup());
       chart.data(myData);
-    }, 2000);
+    }, 10000);
   </script>
 </body>

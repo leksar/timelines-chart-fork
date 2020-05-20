@@ -64,22 +64,24 @@ export default Kapsule({
             .currentSelection(state.zoomX);
         }
 
-        state.colorPalette = [];
-        const predefinedColors = ["#4285f4", "#db4437", "#f4b400", "#ab47bc", "#00acc1", "#0f9d58", "#ff7043", "#9e9d24", "#5c6bc0", "#f06292", "#00796b", "c2185b"];
-        const amountOfShades = Math.floor([...new Set(state.completeFlatData.map(el => el.val))].length / 12);
-        if (amountOfShades > 0) {
-          predefinedColors.forEach(c => {
-            state.colorPalette.push(c);
-            for (let i = 1; i <= amountOfShades; i++) {
-              state.colorPalette.push(increase_brightness(c, (i) * 15));
-            }
-          })
-        } else {
-          state.colorPalette = predefinedColors;
-        }
+          // state.colorPalette = [];
+          // const predefinedColors = ["#4285f4", "#db4437", "#f4b400", "#ab47bc", "#00acc1", "#0f9d58", "#ff7043", "#9e9d24", "#5c6bc0", "#f06292", "#00796b", "c2185b"];
+          // const amountOfShades = Math.floor([...new Set(state.completeFlatData.map(el => el.val))].length / 12);
+          // if (amountOfShades > 0) {
+          //   predefinedColors.forEach(c => {
+          //     state.colorPalette.push(c);
+          //     for (let i = 1; i <= amountOfShades; i++) {
+          //       state.colorPalette.push(increase_brightness(c, (i) * 15));
+          //     }
+          //   })
+          // } else {
+          //   state.colorPalette = predefinedColors;
+          // }
+          // state.zColorScale = d3ScaleOrdinal(state.colorPalette);
 
-        state.zColorScale = d3ScaleOrdinal(state.colorPalette);
-        //
+          // state.zColorScale = d3ScaleOrdinal().domain(['gaming','javascript','keyboard']).range(['#ff0000','#00ff00','#0000ff', '#000000'])
+
+          //
         function increase_brightness(hex, percent) {
           // strip the leading # if it's there
           hex = hex.replace(/^\s*#|\s*$/g, '');
