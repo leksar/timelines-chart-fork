@@ -239,7 +239,7 @@ export default Kapsule({
     },
     zDataLabel: { default: '', triggerUpdate: false }, // Units of z data. Used in the tooltip descriptions
     zScaleLabel: { default: '', triggerUpdate: false }, // Units of colorScale. Used in the legend label
-    enableOverview: { default: true }, // True/False
+    enableOverview: { default: true, onChange(val, state) {if (!val) state.overviewAreaElem.node().style.display = 'none' } }, // True/False
     enableAnimations: {
       default: true,
       onChange(val, state) {
