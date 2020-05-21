@@ -1165,10 +1165,9 @@ export default Kapsule({
       }
 
       function fitsLeft(d) {
-        const localArr = state.completeFlatData.filter(el => (el.group === d.group) && (el.label === d.label));
+        const localArr = state.completeFlatData.filter(el => (el.group === d.group) && (el.label === d.label)).sort((a, b) => a.timeRange[0] - b.timeRange[0]);
         const localIdx = localArr.indexOf(d);
         const letterWidth = state.lineHeight * 0.3;
-
         const rectWidth = localIdx > 0
           ? state.xScale(d.timeRange[0]) - state.xScale(localArr[localIdx - 1].timeRange[1])
           : state.xScale(d.timeRange[0]);
@@ -1178,7 +1177,7 @@ export default Kapsule({
       }
 
       function fitsRight(d) {
-        const localArr = state.completeFlatData.filter(el => (el.group === d.group) && (el.label === d.label));
+        const localArr = state.completeFlatData.filter(el => (el.group === d.group) && (el.label === d.label)).sort((a, b) => a.timeRange[0] - b.timeRange[0]);
         const localIdx = localArr.indexOf(d);
         const letterWidth = state.lineHeight * 0.3;
         const next = localArr[localIdx + 1];
