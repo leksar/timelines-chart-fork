@@ -57,7 +57,8 @@ export default Kapsule({
         ];
 
         state.zoomY = [null, null];
-        state.leftMargin = Math.max(data.reduce((max, el) => Math.max(max, el.group.length), 0) * 7 + 10, state.leftMargin);
+        // state.leftMargin = Math.max(data.reduce((max, el) => Math.max(max, el.group.length), 0) * 7 + 10, state.leftMargin);
+        state.leftMargin = state.leftMargin || data.reduce((max, el) => Math.max(max, el.group.length), 0) * 7 + 10;
         if (state.overviewArea) {
           state.overviewArea
             .domainRange(state.zoomX)
@@ -102,7 +103,6 @@ export default Kapsule({
         }
 
         function parseData(rawData) {
-
 
           state.completeStructData = [];
           state.totalNLines = 0;
@@ -1023,8 +1023,7 @@ export default Kapsule({
       fontSize = Math.min(14, minHeight * fontVerticalMargin * Math.sqrt(2));
       maxChars = Math.floor(state.leftMargin / (fontSize / Math.sqrt(2)));
 
-      // state.grpAxis.tickFormat(d => reduceLabel(d, maxChars));
-      state.grpAxis.tickFormat(d => d);
+      state.grpAxis.tickFormat(d => reduceLabel(d, maxChars));
       state.svg.select('g.grp-axis')
         .transition().duration(state.transDuration)
         .style('font-size', fontSize + 'px')
